@@ -455,6 +455,17 @@ input,textarea,.lrow input{-webkit-user-select:text;user-select:text}
   .knobs{display:none}
 }
 body.stage .app{padding:0}
+
+/* scenläge: flytta texten */
+.stageText{display:none}
+body.stage .stageText{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:8px;position:fixed;z-index:91;left:16px;right:16px;max-width:520px;margin:0 auto;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 108px)}
+body.stage .stageText .hw{height:46px;border-radius:9px;font-size:13px;font-weight:800;box-shadow:3px 3px 0 var(--ink)}
+body.stage .stageText .hw:active{transform:translate(3px,3px);box-shadow:none}
+body.stage .stageText .now{background:var(--sig)}
+body.stage .stageText .sOff{grid-column:1/-1;text-align:center;font-size:12px;font-weight:600;color:var(--mid);min-height:15px}
+body.stage .screen{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 180px)}
+body.stage #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 186px)}
 </style>
 </head>
 <body>
@@ -533,6 +544,12 @@ body.stage .app{padding:0}
       </div>
       <div class="cassFoot" aria-hidden="true"><i></i><i></i></div>
 
+      <div class="stageText" aria-label="Flytta texten">
+        <button class="hw" id="sTxtM" title="Visa texten tidigare">◀ Tidigare</button>
+        <button class="hw now" id="sNow" title="Tryck när raden börjar sjungas">Raden börjar nu</button>
+        <button class="hw" id="sTxtP" title="Visa texten senare">Senare ▶</button>
+        <span class="sOff" id="sOffV"></span>
+      </div>
       <div class="stageBar">
         <button class="hw tb" id="sPrev" title="Förra låten"><svg class="ic"><use href="#icPrev"/></svg></button>
         <button class="hw tb play" id="sPlay">▶</button>
@@ -714,7 +731,9 @@ body.stage .app{padding:0}
       </div>
       <div class="status" id="aiSt"></div>
       <button class="btn" id="bAiRun" style="margin-top:12px" hidden>Kör AI-separering</button>
-      <div class="tgl" style="margin-top:6px"><div class="tx"><b>Använd grafikkortet</b><small>Mycket snabbare AI. Kontrollräknas först och stängs av om det räknar fel</small></div><div class="sw" id="swGpu"></div></div>
+      <div class="tgl" style="margin-top:6px"><div class="tx"><b>Fyll ut musiken</b><small>Lyfter musiken där sången togs bort, så den inte blir tunn och tyst</small></div><div class="sw" id="swFill"></div></div>
+      <div class="tgl"><div class="tx"><b>Putsa bort sångrester</b><small>Tar bort svagt eko och viskningar av sången som AI:n missat. Gäller nya låtar</small></div><div class="sw" id="swClean"></div></div>
+      <div class="tgl"><div class="tx"><b>Använd grafikkortet</b><small>Mycket snabbare AI. Kontrollräknas först och stängs av om det räknar fel</small></div><div class="sw" id="swGpu"></div></div>
       <div class="note"><b>AI</b> tar bort sången på riktigt men behöver några minuter per låt, en gång. <b>Snabb</b> är klar på sekunder men lämnar kvar en del sång, och då kan texten inte läggas i takt automatiskt.</div>
     </div>
   </div>
@@ -1243,6 +1262,7 @@ async function mdx(m){
   try{if(sess.release)await sess.release();}catch(e){}
   const n0=m.L.length;let qL=pL,qR=pR;
   if(sr0!==SR){qL=resample(pL,SR,sr0);qR=resample(pR,SR,sr0);}
+  if(m.clean&&m.prim==="voc"){say(97,"Putsar bort sångrester");const c=cleanVoc(m.L,m.R,qL,qR,m.clean);qL=c.L;qR=c.R;}
   const instL=new Float32Array(n0),instR=new Float32Array(n0),vocL=new Float32Array(n0),vocR=new Float32Array(n0);
   const mN=Math.min(n0,qL.length),isV=m.prim==="voc";
   for(let i=0;i<n0;i++){
@@ -1254,6 +1274,38 @@ async function mdx(m){
   const pt=pitchTrack(vocL,vocR,sr0,true);
   self.postMessage({type:"mdxDone",id,instL,instR,vocL,vocR,pitch:pt.pitch,pitchHop:pt.hop,pitchT0:pt.t0,secs:(Date.now()-tStart)/1000},
     [instL.buffer,instR.buffer,vocL.buffer,vocR.buffer,pt.pitch.buffer]);
+}
+
+/* Musiken = mix − sång. Där AI:n missat lite sång (eko, andning, s-ljud) dämpas
+   musiken i just de frekvenserna: mask = |musik|² / (|musik|² + β·|sång|²).
+   Det borttagna flyttas till sångkanalen, så Sång + Musik är fortfarande exakt originalet. */
+function cleanVoc(XL,XR,VL,VR,beta){
+  const n=XL.length,N=2048,H=512,w=hann(N),HB=N/2;
+  const aL=new Float32Array(n+2*N),aR=new Float32Array(n+2*N);
+  const r1=new Float64Array(N),i1=new Float64Array(N),r2=new Float64Array(N),i2=new Float64Array(N),yr=new Float64Array(N),yi=new Float64Array(N);
+  const vl=Math.min(n,VL.length);
+  for(let pos=-(N-H);pos<n;pos+=H){
+    for(let i=0;i<N;i++){const x=pos+i;
+      if(x>=0&&x<n){const vL=x<vl?VL[x]:0,vR=x<vl?VR[x]:0;r1[i]=(XL[x]-vL)*w[i];i1[i]=vL*w[i];r2[i]=(XR[x]-vR)*w[i];i2[i]=vR*w[i];}
+      else{r1[i]=i1[i]=r2[i]=i2[i]=0;}}
+    fft(r1,i1,false);fft(r2,i2,false);
+    for(let k=0;k<=HB;k++){
+      const km=(N-k)&(N-1);
+      /* två reella signaler i en FFT: musik = (Z_k + conj Z_-k)/2, sång = (Z_k − conj Z_-k)/2i */
+      const aRe=(r1[k]+r1[km])*.5,aIm=(i1[k]-i1[km])*.5,bRe=(i1[k]+i1[km])*.5,bIm=(r1[km]-r1[k])*.5;
+      const cRe=(r2[k]+r2[km])*.5,cIm=(i2[k]-i2[km])*.5,dRe=(i2[k]+i2[km])*.5,dIm=(r2[km]-r2[k])*.5;
+      const pa=aRe*aRe+aIm*aIm,pb=bRe*bRe+bIm*bIm,pc=cRe*cRe+cIm*cIm,pd=dRe*dRe+dIm*dIm;
+      const mL=pa/(pa+beta*pb+1e-20),mR=pc/(pc+beta*pd+1e-20);
+      const lr=aRe*mL,li=aIm*mL,rr=cRe*mR,ri=cIm*mR;
+      yr[k]=lr-ri;yi[k]=li+rr;
+      if(k>0&&k<HB){yr[km]=lr+ri;yi[km]=rr-li;}
+    }
+    fft(yr,yi,true);
+    for(let i=0;i<N;i++){const x=pos+i;if(x>=0&&x<n){aL[x]+=yr[i]*w[i];aR[x]+=yi[i]*w[i];}}
+  }
+  const g=1/1.5,L=new Float32Array(n),R=new Float32Array(n);
+  for(let x=0;x<n;x++){L[x]=XL[x]-aL[x]*g;R[x]=XR[x]-aR[x]*g;}
+  return{L,R};
 }
 
 /* ── textsynk v3 ───────────────────────────────────────────────────
@@ -1716,6 +1768,7 @@ const fileOk=f=>!/^(image|text)\//.test(f.type);
 async function addFiles(files){
   const list=[...files].filter(fileOk);
   if(!list.length){toast("Välj ljud- eller videofiler","e");return;}
+  setTimeout(prefetchModels,1500);
   let first=null,n=0;
   for(const f of list){
     const id="s"+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
@@ -1849,6 +1902,7 @@ function installCached(rec,st){
   for(let i=0;i<n;i++){const a=st.L[i]*k,b=st.R[i]*k;vL[i]=a;vR[i]=b;iL[i]=oL[i]-a;iR[i]=oR[i]-b;}
   ana=rec.ana;base.inst={L:iL,R:iR};base.voc={L:vL,R:vR};
   baseBufs={inst:makeBuf([iL,iR]),voc:makeBuf([vL,vR])};
+  computeFill();
   gen++;analyzed=true;renderCache=null;ver=baseVersion();lastChord=-2;
   ai=AI0();ai.state="done";ai.secs=rec.aiSecs||0;ai.how=rec.aiHow||"";ai.front=1;
   setMode("kara",true);updateKnobLabels();
@@ -1929,14 +1983,59 @@ function switchVersion(v){
   updateKnobLabels();
 }
 
+/* ── fyll ut: där sången tagits bort blir musiken tunn. Vi mäter hur mycket starkare originalet
+   var än musiken (glidande 1 s) och lyfter musiken upp till 9 dB där — aldrig så att den klipper.
+   Lyftet följer hur mycket sång som är bortdragen: Original = exakt som förut. */
+let fill=null,fillOn=LS.get("ks_fill",true);
+const FILL_HOP=.05;
+function computeFill(){
+  fill=null;
+  if(!base||!base.inst||!buf)return;
+  const sr=buf.sampleRate,hop=Math.round(sr*FILL_HOP),oL=base.orig.L,oR=base.orig.R,iL=base.inst.L,iR=base.inst.R,n=Math.min(oL.length,iL.length),F=Math.ceil(n/hop);
+  const pm=new Float64Array(F),pi=new Float64Array(F),pk=new Float32Array(F);
+  for(let f=0;f<F;f++){
+    let a=0,b=0,p=0;const e=Math.min(n,(f+1)*hop);
+    for(let i=f*hop;i<e;i+=2){const o=oL[i]+oR[i],m=iL[i]+iR[i];a+=o*o;b+=m*m;const q=Math.abs(iL[i]),r=Math.abs(iR[i]);if(q>p)p=q;if(r>p)p=r;}
+    pm[f]=a;pi[f]=b;pk[f]=p;
+  }
+  const avg=(x,r)=>{const o=new Float64Array(F);let s=0,c=0;for(let f=-r;f<F+r;f++){const a=f+r,b=f-r-1;if(a<F){s+=x[a];c++;}if(b>=0){s-=x[b];c--;}if(f>=0&&f<F)o[f]=s/Math.max(1,c);}return o;};
+  const sm=avg(pm,10),si=avg(pi,10);let top=0;for(let f=0;f<F;f++)if(sm[f]>top)top=sm[f];
+  const db=new Float64Array(F);
+  for(let f=0;f<F;f++){
+    if(sm[f]<top*1e-4){db[f]=0;continue;}                   /* tyst ställe: lyft inget */
+    const d=10*Math.log10((sm[f]+1e-12)/(si[f]+1e-12));
+    db[f]=Math.max(0,Math.min(9,.8*(d-1)));
+  }
+  const g=avg(db,6),out=new Float32Array(F);
+  for(let f=0;f<F;f++){
+    let p=0;for(let k=Math.max(0,f-3);k<=Math.min(F-1,f+3);k++)if(pk[k]>p)p=pk[k];
+    let v=Math.pow(10,g[f]/20);if(p>0)v=Math.min(v,Math.max(1,.95/p));
+    out[f]=v-1;                                            /* extra utöver musiken (0 = inget lyft) */
+  }
+  fill=out;
+}
+function fillAmt(){if(!fill||!fillOn)return 0;return Math.max(0,Math.min(1,1-effGain("voc")))*effGain("inst");}
+function fillCurve(t,T){                                   /* från låttid t till slut, i verklig tid */
+  const dur=buf.duration,rate=20,cnt=Math.max(2,Math.min(40000,Math.ceil((dur-t)/T*rate)+1)),v=new Float32Array(cnt);
+  for(let k=0;k<cnt;k++){const st=t+k/rate*T,f=Math.min(fill.length-1,Math.max(0,Math.round(st/FILL_HOP)));v[k]=fill[f];}
+  return{v,secs:(cnt-1)/rate};
+}
+
 /* ── uppspelning ── */
 function effGain(ch){const any=solo.voc||solo.inst||solo.click;if(any)return solo[ch]?mix[ch]:0;return mute[ch]?0:mix[ch];}
 function gainFor(ch){return ch==="orig"?1:effGain(ch);}
-function applyGains(){if(!nodes)return;nodes.forEach(n=>n.g.gain.setTargetAtTime(gainFor(n.ch),AC.currentTime,.015));}
+function applyGains(){if(!nodes)return;nodes.forEach(n=>{n.g.gain.setTargetAtTime(gainFor(n.ch),AC.currentTime,.015);if(n.g2)n.g2.gain.setTargetAtTime(fillAmt(),AC.currentTime,.05);});}
+function heardCtx(){
+  try{
+    if(AC.getOutputTimestamp){const o=AC.getOutputTimestamp();
+      if(o&&o.contextTime>0&&o.performanceTime>0){const t=o.contextTime+(performance.now()-o.performanceTime)/1000;if(Math.abs(t-AC.currentTime)<1)return t;}}
+  }catch(e){}
+  return AC.currentTime-(AC.outputLatency||AC.baseLatency||0);
+}
 function curT(){
   if(!buf)return 0;
   if(!playing||!ver)return pos;
-  let t=startSong+(AC.currentTime-startCtx)*ver.T;
+  let t=startSong+Math.max(0,heardCtx()-startCtx)*ver.T;
   if(loopOn&&loopB>loopA&&t>=loopB)t=loopA+((t-loopA)%(loopB-loopA));
   return clamp(t,0,buf.duration);
 }
@@ -1959,13 +2058,22 @@ function startAt(t){
     if(loopOn){s.loop=true;s.loopStart=loopA/T;s.loopEnd=loopB/T;}
     const g=A.createGain();g.gain.value=gainFor(ch);
     s.connect(g);g.connect(bus);
+    let f2=null,g2=null;
+    if(ch==="inst"&&fill){                                 /* parallell väg: lyftet där sången var */
+      f2=A.createGain();g2=A.createGain();g2.gain.value=fillAmt();
+      try{
+        if(loopOn){let m=0;const a=Math.floor(loopA/FILL_HOP),z=Math.ceil(loopB/FILL_HOP);for(let k=a;k<z&&k<fill.length;k++)m+=fill[k];f2.gain.value=m/Math.max(1,z-a);}
+        else{const c=fillCurve(t,T);f2.gain.value=c.v[0];f2.gain.setValueCurveAtTime(c.v,when,Math.max(.05,c.secs));}
+      }catch(e){f2.gain.value=0;}
+      s.connect(f2);f2.connect(g2);g2.connect(bus);
+    }
     s.start(when,Math.min(t/T,Math.max(0,b.duration-.01)));
-    nodes.push({ch,s,g});
+    nodes.push({ch,s,g,f2,g2});
   });
   if(nodes.length){const my=nodes;nodes[0].s.onended=()=>{if(nodes===my&&playing&&!loopOn)onSongEnd();};}
   startCtx=when;startSong=t;pos=t;playing=true;updatePlay();
 }
-function stopNodes(){if(nodes)nodes.forEach(n=>{n.s.onended=null;try{n.s.stop();}catch(e){}try{n.g.disconnect();}catch(e){}});nodes=null;}
+function stopNodes(){if(nodes)nodes.forEach(n=>{n.s.onended=null;try{n.s.stop();}catch(e){}try{n.g.disconnect();}catch(e){}try{if(n.g2)n.g2.disconnect();}catch(e){}});nodes=null;}
 function pause(){if(!playing)return;pos=curT();stopNodes();playing=false;updatePlay();}
 function togglePlay(){if(!buf)return;getAC();if(playing)pause();else startAt(pos);}
 function seek(t){if(!buf)return;t=clamp(t,0,buf.duration);if(playing)startAt(t);else{pos=t;refreshUI(t,true);}}
@@ -2118,7 +2226,7 @@ async function prepare(){
     const was=playing,t=curT();if(playing){stopNodes();playing=false;}
     ana={bpm:res.bpm,beats:res.beats,keyRoot:res.keyRoot,keyMode:res.keyMode,chords:res.chords,downPhase:res.downPhase,pitch:res.pitch,pitchHop:res.pitchHop,pitchT0:res.pitchT0};
     base={orig:base.orig,inst:{L:res.instL,R:res.instR},voc:{L:res.vocL,R:res.vocR}};
-    baseBufs={inst:makeBuf([res.instL,res.instR]),voc:makeBuf([res.vocL,res.vocR])};
+    baseBufs={inst:makeBuf([res.instL,res.instR]),voc:makeBuf([res.vocL,res.vocR])};computeFill();
     gen++;analyzed=true;renderCache=null;ver=baseVersion();lastChord=-2;
     setMode(stereo?"kara":"orig",true);
     preparing=false;jobHide();updateAll();updateKnobLabels();
@@ -2217,7 +2325,7 @@ const WHM={enc:{file:"base-encoder.int8.onnx",size:29120534,min:2.5e7,urls:["./b
            dec:{file:"base-decoder.int8.onnx",size:130672026,min:1e8,urls:["./base-decoder.int8.onnx",WHB+"base-decoder.int8.onnx"]},
            tok:{file:"base-tokens.txt",size:816730,min:5e5,urls:["./base-tokens.txt",WHB+"base-tokens.txt"]}};
 const isMobile=()=>/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
-const cores=()=>Math.max(1,Math.min(4,(navigator.hardwareConcurrency||4)-1));
+const cores=()=>{const hc=navigator.hardwareConcurrency||4;return Math.max(1,hc>=8?6:Math.min(4,hc-1));};
 const isoThreads=()=>self.crossOriginIsolated&&cores()>1?cores():1;
 /* stora modeller hämtas inte över mobilnät utan att du sagt ja */
 async function isCached(a){try{const c=await caches.open("ks-models-v1"),hit=await c.match(a.file);return !!hit;}catch(e){return false;}}
@@ -2231,7 +2339,23 @@ async function okToFetch(assets,ask){
   return false;
 }
 const WIFI=()=>Object.assign(new Error("Väntar på wifi för att hämta AI-modellen"),{wifi:true});
-async function fetchAsset(a,onP){
+/* samma fil hämtas aldrig två gånger samtidigt: den som frågar under en pågående hämtning hakar på */
+const inflight={};
+function fetchAsset(a,onP){
+  let e=inflight[a.file];
+  if(!e){e={ls:new Set()};e.p=fetchAssetRaw(a,(p,g)=>e.ls.forEach(f=>{try{f(p,g);}catch(x){}})).finally(()=>{delete inflight[a.file];});inflight[a.file]=e;}
+  if(onP)e.ls.add(onP);
+  return e.p;
+}
+/* på wifi hämtas alla AI-modeller i förväg i bakgrunden → ingen väntan på nedladdning sen */
+let prefetching=false;
+async function prefetchModels(){
+  if(prefetching||onCell()||navigator.onLine===false)return;
+  prefetching=true;
+  try{for(const a of [MODEL,WHM.tok,WHM.enc,WHM.dec]){if(onCell())break;if(!(await isCached(a))){try{await fetchAsset(a);}catch(e){break;}}}}
+  finally{prefetching=false;}
+}
+async function fetchAssetRaw(a,onP){
   let cache=null;
   try{cache=await caches.open("ks-models-v1");const hit=await cache.match(a.file);if(hit){const ab=await hit.arrayBuffer();if(ab.byteLength>=a.min)return ab;}}catch(e){}
   let lastErr;
@@ -2277,7 +2401,7 @@ async function aiRun(L,R,sr,h){
   for(const tier of tiers){
     if(h.onTier)h.onTier(tier);
     const job=oneShot({type:"mdx",L:L.slice(),R:R.slice(),sr,model:model.slice(0),dimf:MODEL.dimf,comp:MODEL.comp,prim:MODEL.prim,ep:tier.ep,threads:tier.threads,
-      validate:!!tier.validate,parts:!!h.onPart&&MODEL.prim==="voc",ortBase:ORT_BASE},null,
+      validate:!!tier.validate,clean:LS.get("ks_clean",true)?1:0,parts:!!h.onPart&&MODEL.prim==="voc",ortBase:ORT_BASE},null,
       {done:"mdxDone",limit:tier.ep==="webgpu"?75000:240000,onMsg:m=>{
         if(m.type==="progress"){if(h.onP)h.onP(m);}
         else if(m.type==="mdxPart"){if(h.onPart)h.onPart(m.a,m.vL,m.vR);}
@@ -2307,6 +2431,7 @@ function installStems(iL,iR,vL,vR){
   gen++;
   base.inst={L:iL,R:iR};base.voc={L:vL,R:vR};
   baseBufs={inst:makeBuf([iL,iR]),voc:makeBuf([vL,vR])};
+  computeFill();
   renderCache=null;switchVersion(baseVersion());if(paramsKey()!=="0|1.00")applyVersion();
 }
 async function startAI(){
@@ -2329,7 +2454,10 @@ async function startAI(){
     if(mySong!==songId)return false;
     const res=out.res;
     if(ana){ana.pitch=res.pitch;ana.pitchHop=res.pitchHop;ana.pitchT0=res.pitchT0;}
-    if(ai.front>=.999&&myGen===gen){                 /* allt är redan inskrivet bit för bit — ingen omstart behövs */
+    if(ai.front>=.999&&myGen===gen){                 /* allt spelas redan — slutversionen (putsad) skrivs in utan avbrott */
+      base.inst={L:res.instL,R:res.instR};base.voc={L:res.vocL,R:res.vocR};
+      try{baseBufs.inst.copyToChannel(res.instL,0);baseBufs.inst.copyToChannel(res.instR,1);baseBufs.voc.copyToChannel(res.vocL,0);baseBufs.voc.copyToChannel(res.vocR,1);}catch(e){}
+      computeFill();
       gen++;renderCache=null;
       if(ver&&ver.key!=="0|1.00"){ver.key="stale";applyVersion();}
     }else installStems(res.instL,res.instR,res.vocL,res.vocR);
@@ -2352,12 +2480,42 @@ async function startAI(){
 }
 $("bAiRun").onclick=()=>{closeSheet();ai.state="idle";runPipeline(true);};
 $("swGpu").classList.toggle("on",useGpu);
+$("swFill").classList.toggle("on",fillOn);
+$("swFill").onclick=()=>{fillOn=!fillOn;LS.set("ks_fill",fillOn);$("swFill").classList.toggle("on",fillOn);applyGains();};
+$("swClean").classList.toggle("on",LS.get("ks_clean",true));
+$("swClean").onclick=()=>{const v=!LS.get("ks_clean",true);LS.set("ks_clean",v);$("swClean").classList.toggle("on",v);};
 $("swGpu").onclick=()=>{useGpu=!useGpu;LS.set("ks_gpu2",useGpu);LS.set("ks_gpu_bad",0);$("swGpu").classList.toggle("on",useGpu);};
 
 /* ── AI som lyssnar på sången (Whisper) och lägger texten i takt ── */
 const LANGN={sv:"svenska",fi:"finska",en:"engelska",no:"norska",nn:"norska",da:"danska",de:"tyska",es:"spanska",fr:"franska",it:"italienska",pt:"portugisiska",nl:"nederländska",pl:"polska",ru:"ryska",et:"estniska"};
 const langName=c=>LANGN[c]||c||"okänt";
 function monoOf(L,R){const n=L.length,m=new Float32Array(n);for(let i=0;i<n;i++)m[i]=(L[i]+R[i])*.5;return m;}
+/* språket gissas från själva texten (mätt: 76 av 79 rätt) — säkrare än att låta AI:n gissa från sången,
+   som t.ex. tog spanska för svenska. Rätt språk gav dubbelt så många rader i takt. */
+const SW={
+ sv:"och jag det att en är som på du inte med för har vi mig min dig så men kan vill när om ett den av till vad där här bara aldrig alltid hjärta natt dag mitt din ditt mina dina oss er dem hon han jag kommer går",
+ fi:"ja on en ei että se mä sä olen oon mun sun kun niin mitä minä sinä ole vaan tää mut tai ku sen sua mua mulle sulle kaikki nyt vielä tänään yö päivä sydän",
+ en:"the and i you to a of my in me it is that on your be we for love all can don't with so this what know oh just like when",
+ de:"ich und die der du nicht das ist ein zu mich mir wir es sie auf mit dich dein den sein ist eine auch noch wie was",
+ es:"que de la el y en no me te mi tu un una por es lo se amor con para yo como mas pero todo",
+ fr:"je et de la le les tu que pas un une des est moi toi il on ne pour dans mon ma ce qui suis plus",
+ no:"og jeg det er ikke du meg deg som på til med en vi har kan vil når hva av hjerte natt aldri bare",
+ da:"og jeg det er ikke du mig dig som på til med en vi har kan vil når hvad af hjerte nat aldrig bare"};
+const SET={};for(const k in SW)SET[k]=new Set(SW[k].split(" "));
+function guessLang(lines){
+  const w=(Array.isArray(lines)?lines.join(" "):lines).toLowerCase().normalize("NFKC").match(/[\p{L}']+/gu)||[];
+  if(w.length<8)return null;
+  const sc={};for(const k in SET){let c=0;for(const x of w)if(SET[k].has(x))c++;sc[k]=c/w.length;}
+  const t=w.join(" ");
+  if(/å/.test(t)){sc.fi*=.3;sc.de*=.3;}
+  if(/ä|ö/.test(t)&&!/å/.test(t)){sc.no*=.5;sc.da*=.5;}
+  if(/ø|æ/.test(t)){sc.sv*=.3;}
+  if(/ñ|¿|¡/.test(t))sc.es*=1.5;
+  const r=Object.entries(sc).sort((a,b)=>b[1]-a[1]);
+  if(r[0][1]<.08||r[0][1]<r[1][1]*1.3)return null;
+  return r[0][0];
+}
+const effLang=lines=>langSel!=="auto"?langSel:((lines&&lines.length&&guessLang(lines))||"auto");
 /* lyssnar igenom sången → {segs,lang} och, om textrader ges, tider för dem */
 async function asrRun(audio,sr,lines,lang,h){
   const sizes={enc:0,dec:0,tok:0},tot=WHM.enc.size+WHM.dec.size+WHM.tok.size,up=k=>(p,got)=>{sizes[k]=got;if(h.onP)h.onP({dl:(sizes.enc+sizes.dec+sizes.tok)/tot});};
@@ -2405,8 +2563,9 @@ async function syncText(force){
   try{
     const audio=monoOf(base.voc.L,base.voc.R),sr=buf.sampleRate,alive=()=>mySong===songId&&fg===my;
     let r,segs=rec.segs,lang=rec.lang;
-    if(!segs||force||rec.segsLang!==langSel){
-      r=await asrRun(audio,sr,lines,langSel,{ask:true,alive,setCancel:c=>{my.cancel=c;},onP:m=>{
+    const lg=effLang(lines);
+    if(!segs||force||rec.segsLang!==lg){
+      r=await asrRun(audio,sr,lines,lg,{ask:true,alive,setCancel:c=>{my.cancel=c;},onP:m=>{
         if(m.dl!=null)jobShow(m.dl*100,"🎧 Hämtar lyssnar-AI…","160 MB — bara första gången. Använd wifi.",true);
         else if(m.total)jobShow(m.p,"🎧 AI lyssnar på sången… "+m.ci+"/"+m.total,m.eta>0?"Ca "+fmtDur(m.eta)+" kvar":"Snart klart",true);
         else jobShow(m.p,"🎧 "+m.label+"…","",true);
@@ -2417,7 +2576,7 @@ async function syncText(force){
       r=await syncRun(audio,sr,lines,segs,{setCancel:c=>{my.cancel=c;}});
     }
     if(mySong!==songId)return false;
-    rec.segs=segs;rec.lang=lang;rec.segsLang=langSel;rec.syncTried=true;
+    rec.segs=segs;rec.lang=lang;rec.segsLang=lg;rec.syncTried=true;
     const pct=Math.round((r.cover||0)*100);
     if(!r.times||r.cover<.12){
       rec.lyrState="rough";rec.lyrInfo="AI:n kände bara igen "+pct+" % av orden ("+langName(lang)+"), för lite för att lägga texten i takt. Välj rätt språk ovan och tryck Synka om — eller använd Tap-synk.";
@@ -2459,6 +2618,14 @@ async function listenWrite(){
       got.push({t,s:+g.s0.toFixed(2)});
     });
     if(!got.length){toast("AI:n hörde ingen tydlig sång","e");return;}
+    /* Whispers egna tider ligger i snitt 0,3 s för tidigt. Raderna läggs därför i takt på samma sätt
+       som inklistrad text (mätt: 47 → 73 % av raderna inom 0,3 s). */
+    try{
+      jobShow(97,"🎧 Lägger raderna i takt…","",true);
+      const sr=await syncRun(monoOf(base.voc.L,base.voc.R),buf.sampleRate,got.map(g=>g.t),r.segs,{setCancel:c=>{my.cancel=c;}});
+      if(mySong!==songId)return;
+      if(sr&&sr.times&&sr.times.length===got.length)got.forEach((g,i)=>{const v=sr.times[i];if(isFinite(v))g.s=+v.toFixed(2);});
+    }catch(e){if(e.cancel)return;console.warn("radsynk",e);}
     lyrics=got;lyrOffset=0;rec.lyrState="synced";rec.lyrInfo="skriven av AI efter gehör ("+langName(r.lang)+") — rätta gärna";
     lyricsChanged();toast("AI skrev "+got.length+" rader ✓","s");
   }catch(e){if(mySong===songId&&!e.cancel){console.error(e);toast("AI-lyssningen misslyckades: "+(e.message||e),"e");}}
@@ -2520,9 +2687,10 @@ async function pump(){
         if(voc){
           show(0,"text läggs i takt");
           const lines=rec.lyrics.map(x=>x.t).filter(t=>t.trim());
-          const r=await asrRun(monoOf(voc.L,voc.R),sr,lines,langSel,{alive,setCancel:setC,onP:m=>{if(m.dl!=null)show(m.dl*100,"hämtar lyssnar-AI");else if(m.total)show(m.p,"text läggs i takt");}});
+          const lg=effLang(lines);
+          const r=await asrRun(monoOf(voc.L,voc.R),sr,lines,lg,{alive,setCancel:setC,onP:m=>{if(m.dl!=null)show(m.dl*100,"hämtar lyssnar-AI");else if(m.total)show(m.p,"text läggs i takt");}});
           if(!alive())throw Object.assign(new Error("Avbruten"),{cancel:true});
-          rec.segs=r.segs;rec.lang=r.lang;rec.segsLang=langSel;rec.syncTried=true;const pct=Math.round((r.cover||0)*100);
+          rec.segs=r.segs;rec.lang=r.lang;rec.segsLang=lg;rec.syncTried=true;const pct=Math.round((r.cover||0)*100);
           if(r.times&&r.cover>=.12){rec.lyrics=lines.map((t,i)=>({t,s:+r.times[i].toFixed(2)}));rec.lyrOffset=0;rec.lyrState="synced";rec.lyrInfo="AI:n kände igen "+pct+" % av orden ("+langName(r.lang)+")";}
           else rec.lyrInfo="AI:n kände bara igen "+pct+" % av orden ("+langName(r.lang)+"), för lite för att lägga texten i takt.";
           saveRec(rec,true);
@@ -2581,6 +2749,7 @@ function updateKnobLabels(){
 function lyricsChanged(save){
   lyrSorted=[...lyrics].sort((a,b)=>a.s-b.s);
   $("offV").textContent=(lyrOffset>0?"+":"")+lyrOffset.toFixed(2)+" s";
+  $("sOffV").textContent=lyrOffset?"Texten flyttad "+(lyrOffset>0?"+":"")+lyrOffset.toFixed(2).replace(".",",")+" s":"";
   lastActRow=-1;renderList();lastLyrKey="";if(buf)updLyrics(curT(),true);updateAll();lyrStatus();
   if(save!==false&&cur){
     cur.lyrics=lyrSorted.map(x=>({t:x.t,s:+x.s.toFixed(2)}));cur.lyrOffset=lyrOffset;
@@ -2677,11 +2846,24 @@ $("bResync").onclick=()=>{
   if(syncBusy)return;
   cur.lyrState="rough";cur.lyrInfo="";cur.syncTried=false;closeSheet();
   if(!analyzed||(stereo&&sepMode==="ai"&&ai.state!=="done"&&ai.state!=="fail")){toast("Texten läggs i takt när sången är bortplockad");lyrStatus();return;}
-  syncText(cur.segsLang!==langSel).then(()=>pump());
+  syncText(cur.segsLang!==effLang(lyrSorted.map(l=>l.t))).then(()=>pump());
 };
 chipGroup("langChips",langSel,v=>{langSel=v;LS.set("ks_lang2",v);});
-$("offM").onclick=()=>{lyrOffset=+(lyrOffset-.25).toFixed(2);markManual();lyricsChanged();};
-$("offP").onclick=()=>{lyrOffset=+(lyrOffset+.25).toFixed(2);markManual();lyricsChanged();};
+function nudgeText(d){if(!lyrics.length){toast("Ingen text att flytta","e");return;}lyrOffset=+(lyrOffset+d).toFixed(2);markManual();lyricsChanged();lastLyrKey="";if(buf)updLyrics(curT(),true);}
+$("offM").onclick=()=>nudgeText(-.25);
+$("offP").onclick=()=>nudgeText(.25);
+$("sTxtM").onclick=()=>nudgeText(-.25);
+$("sTxtP").onclick=()=>nudgeText(.25);
+/* tryck när en rad börjar sjungas → hela texten flyttas så att just den raden börjar nu */
+$("sNow").onclick=()=>{
+  if(!buf||!lyrSorted.length){toast("Ingen text att flytta","e");return;}
+  if(!playing){toast("Spela låten och tryck när en rad börjar","e");return;}
+  const t=curT(),tt=t-lyrOffset;let best=-1,bd=4;
+  lyrSorted.forEach((l,i)=>{const d=Math.abs(l.s-tt);if(d<bd){bd=d;best=i;}});
+  if(best<0){toast("Ingen rad i närheten — vänta tills nästa rad börjar","e");return;}
+  lyrOffset=+(t-lyrSorted[best].s).toFixed(2);markManual();lyricsChanged();lastLyrKey="";updLyrics(t,true);
+  toast("”"+lyrSorted[best].t.slice(0,28)+(lyrSorted[best].t.length>28?"…":"")+"” börjar nu","s");
+};
 $("bAdd").onclick=()=>{
   if(!cur||!buf){toast("Öppna en låt först","e");return;}
   const n={t:"",s:Math.max(0,curT()-lyrOffset)};lyrics.push(n);markManual();lyricsChanged();
@@ -2934,7 +3116,7 @@ requestAnimationFrame(frame);
 (async()=>{
   try{lib=(await DB.all("songs"))||[];}catch(e){lib=[];}
   lib.sort((a,b)=>a.added-b.added);renderLib();updateAll();
-  if(lib.length){const last=LS.get("ks_last","");openSong((lib.find(x=>x.id===last)||lib[0]).id);}
+  if(lib.length){const last=LS.get("ks_last","");openSong((lib.find(x=>x.id===last)||lib[0]).id);setTimeout(prefetchModels,4000);}
 })();
 </script>
 <script>
