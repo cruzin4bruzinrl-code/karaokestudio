@@ -9,3 +9,5 @@ Karaoke-app (PWA) som tar bort sången ur vilken låt som helst och lägger text
 Varje ny push uppdaterar appen automatiskt.
 
 Typsnitt: Archivo och Caveat (SIL Open Font License, se `fonts/`).
+
+Ordlistor i `lex/` (de 40 000 vanligaste orden per språk, för autokorrigering): [FrequencyWords](https://github.com/hermitdave/FrequencyWords) av Hermit Dave, CC BY-SA 4.0, byggda på OpenSubtitles.

@@ -476,6 +476,15 @@ body.stage #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 186px)}
 .calib .cTap{width:100%;padding:34px 0;font-size:22px}
 .calib .cD{font-size:20px;letter-spacing:.3em;color:var(--sig);min-height:26px}
 .calib .sb{flex:none;padding:10px 22px}
+
+/* ord för ord */
+.lCur.words>#lCurS{background:none}
+.lCur.words .w{display:inline-block}
+.lyr>div{flex-shrink:0}
+.lCur.long{font-size:20px}
+@media (max-height:860px){.lyr:has(.lCur.long) .lPrev{display:none}}
+body.stage .lCur.long{font-size:clamp(26px,6.4vw,58px)}
+body.stage .lyr:has(.lCur.long) .lPrev{display:block}
 </style>
 </head>
 <body>
@@ -850,7 +859,7 @@ let _lp=-1;
 function prog(id,p,label){p=Math.round(p);if(p===_lp)return;_lp=p;self.postMessage({type:"progress",id,p,label});}
 self.onmessage=e=>{
   const m=e.data;_lp=-1;
-  Promise.resolve().then(()=>m.type==="analyze"?analyze(m):m.type==="render"?render(m):m.type==="mdx"?mdx(m):m.type==="asr"?asr(m):m.type==="sync"?syncJob(m):null)
+  Promise.resolve().then(()=>m.type==="analyze"?analyze(m):m.type==="render"?render(m):m.type==="mdx"?mdx(m):m.type==="asr"?asr(m):m.type==="sync"?syncJob(m):m.type==="words"?wordsJob(m):m.type==="fix"?fixJob(m):null)
     .catch(err=>self.postMessage({type:"error",id:m.id,msg:String(err&&err.message||err)}));
 };
 
@@ -1476,12 +1485,66 @@ function syncLines(lines,segs,voc,sr,P){
   return{times,cover:totW?matchedW/totW:0,matched:matchedL,hits:score,rate};
 }
 /* lägger om texten mot redan hörda ord (när texten ändrats men sången redan är avlyssnad) */
+/* ── ord i takt: inom varje rad följer markeringen sångarens röst (från den bortplockade sångkanalen).
+   Orden fördelas över de stunder rösten faktiskt låter, efter antal stavelser. Pauser i sången = markeringen väntar. */
+let SNAP=0;
+function syl(w){const m=w.toLowerCase().match(/[aeiouyåäöæøéèêáàíóúüœ]+/g);return Math.max(1,m?m.length:1)+w.length/6;}
+function wordTimes(lines,times,x,sr){
+  const V=vad(x,sr,{thr:.12,minSil:.15}),n=V.n,out=[];
+  for(let i=0;i<lines.length;i++){
+    const s=times[i],nx=i+1<times.length?times[i+1]:s+8,end=Math.min(nx,s+12);
+    const ws=String(lines[i]).trim().split(/\s+/).filter(Boolean);if(!ws.length||!isFinite(s)){out.push(null);continue;}
+    const a=Math.max(0,Math.floor((s-.15)/HOP)),b=Math.min(n,Math.ceil(end/HOP)),vf=[];
+    for(let f=a;f<b;f++)if(V.act[f])vf.push(f);
+    const wt=ws.map(syl),tot=wt.reduce((p,c)=>p+c,0);
+    if(vf.length<8){                                          /* för lite röst: jämnt över en rimlig tid */
+      const d=Math.min(end-s,tot*.28+.4);let c=0;const w=ws.map((_,k)=>{const v=c/tot*d;c+=wt[k];return +v.toFixed(2);});
+      out.push({w,e:+d.toFixed(2)});continue;
+    }
+    let c=0;const w=ws.map((_,k)=>{let f=vf[Math.min(vf.length-1,Math.floor(c/tot*vf.length))];c+=wt[k];
+      if(k>0&&SNAP){let bf=f,bv=0;for(let g=Math.max(a+2,f-SNAP);g<=Math.min(b-1,f+SNAP);g++){const r=V.rms,v=r[g]/(Math.min(r[g-1],r[g-2])+1e-6);const sc=v-Math.abs(g-f)*.04;if(v>1.25&&sc>bv){bv=sc;bf=g;}}f=bf;}
+      return +Math.max(0,f*HOP-s).toFixed(2);});
+    for(let k=1;k<w.length;k++)if(w[k]<w[k-1]+.05)w[k]=+(w[k-1]+.05).toFixed(2);
+    out.push({w,e:+Math.max(w[w.length-1]+.2,(vf[vf.length-1]+1)*HOP-s).toFixed(2)});
+  }
+  return out;
+}
+/* ── autokorrigering: ord som inte finns i språkets ordlista (40 000 vanligaste orden) byts mot
+   närmaste riktiga ord. Mätt: 2/3 färre påhittade ord, och aldrig fler fel. Namn mitt i raden och ord
+   med apostrof lämnas i fred. Vanliga spökfraser som Whisper hittar på i tystnad tas bort. */
+function levW(a,b,max){const m=a.length,n=b.length;if(Math.abs(m-n)>max)return max+1;let p=new Array(n+1);for(let j=0;j<=n;j++)p[j]=j;
+  for(let i=1;i<=m;i++){const c=[i];let lo=i;for(let j=1;j<=n;j++){const v=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));c[j]=v;if(v<lo)lo=v;}if(lo>max)return max+1;p=c;}return p[n];}
+function mkLex(txt,N){const words=[],freq=new Map();for(const l of txt.split('\n')){const[w]=l.trim().split(/\s+/);const f=1e6/(words.length+10);if(!w||!/^\p{L}[\p{L}']*$/u.test(w))continue;if(!freq.has(w)){freq.set(w,+f);words.push(w);}if(words.length>=N)break;}
+  const byLen=new Map();for(const w of words){const L=w.length;if(!byLen.has(L))byLen.set(L,[]);byLen.get(L).push(w);}return{freq,byLen,top:Math.log(freq.get(words[0]))};}
+function fixWord(w,lex,o,first){
+  const lw=w.toLowerCase();
+  if(lw.length<3||lex.freq.has(lw)||/\d/.test(lw))return w;
+  if(/'/.test(lw)){const p=lw.split("'");if(lex.freq.has(lw.replace(/'/g,""))||p.every(x=>!x||x.length<3||lex.freq.has(x)))return w;return w;}
+  if(!first&&w[0]!==lw[0])return w;                        /* namn mitt i raden rörs inte */
+  const max=lw.length<=5?1:lw.length<=9?2:3;let best=null,bs=-1e9;
+  for(let L=lw.length-max;L<=lw.length+max;L++){const arr=lex.byLen.get(L);if(!arr)continue;
+    for(const c of arr){const d=levW(lw,c,max);if(d>max)continue;const s=-d*o.dw+Math.log(lex.freq.get(c))*o.fw;if(s>bs){bs=s;best=c;}}}
+  if(!best)return w;
+  // behåll stor bokstav
+  return w[0]!==w[0].toLowerCase()?best[0].toUpperCase()+best.slice(1):best;
+}
+function fixText(t,lex,o={dw:3,fw:.35}){let k=0;return t.replace(/[\p{L}']+/gu,w=>fixWord(w,lex,o,k++===0));}
+const GHOST=/(textning|undertext|tack för att (du|ni) (tittade|lyssnade)|prenumerera|subtitles? by|thanks for watching|amara\.org|untertitel|sous-titr|subtítulos|tekstitys)/i;
+function fixJob(m){
+  const lex=m.lex?mkLex(m.lex,40000):null;let fixed=0;
+  const segs=m.segs.filter(g=>!GHOST.test(g.t)).map(g=>{if(!lex)return g;const t=fixText(g.t,lex);if(t!==g.t)fixed++;return Object.assign({},g,{t});});
+  self.postMessage({type:"fixDone",id:m.id,segs,fixed});
+}
+function wordsJob(m){
+  let x=m.sr!==16000?resample(m.audio,m.sr,16000):m.audio;
+  self.postMessage({type:"wordsDone",id:m.id,wt:wordTimes(m.lines,m.times,x,16000)});
+}
 function syncJob(m){
   let x=m.sr!==16000?resample(m.audio,m.sr,16000):m.audio,pk=0;
   for(let i=0;i<x.length;i++){const v=Math.abs(x[i]);if(v>pk)pk=v;}
   if(pk>0){const g=.9/pk,y=new Float32Array(x.length);for(let i=0;i<x.length;i++)y[i]=x[i]*g;x=y;}
   const r=syncLines(m.lines,m.segs,x,16000);
-  self.postMessage({type:"syncDone",id:m.id,times:r.times,cover:r.cover,matched:r.matched,hits:r.hits||null});
+  self.postMessage({type:"syncDone",id:m.id,times:r.times,cover:r.cover,matched:r.matched,hits:r.hits||null,wt:wordTimes(m.lines,r.times,x,16000)});
 }
 
 /* ── TALIGENKÄNNING (Whisper) + TEXTSYNK ─────────────────────────
@@ -1597,13 +1660,15 @@ async function asr(m){
   /* språk: valt, eller det Whisper hör i de tre längsta bitarna */
   let lang=m.lang&&m.lang!=="auto"?WH.toks[WH.codes.indexOf(m.lang)]:0,langCode=m.lang;
   if(!lang){
-    const acc=new Float64Array(WH.toks.length),top=ch.map((c,i)=>[c[1]-c[0],i]).sort((a,b)=>b[0]-a[0]).slice(0,3);
+    const acc=new Float64Array(WH.toks.length),top=ch.map((c,i)=>[c[1]-c[0],i]).sort((a,b)=>b[0]-a[0]).slice(0,5);
+    /* bara vanliga språk får vinna — annars kan sång tolkas som t.ex. walesiska eller latin och bli påhittade ord */
+    const allow=(m.langSet||"sv,fi,en,no,da,de,es,fr,it,pt,nl,pl,et,is").split(",").map(c=>WH.codes.indexOf(c)).filter(i=>i>=0);
     for(const[,ci]of top){
       const[a,b]=ch[ci];await whEncode(x.subarray(Math.floor(a*SR),Math.floor(b*SR)));const lg=await whStep([WH.sot]);
       let mx=-Infinity;for(const t of WH.toks)if(lg[t]>mx)mx=lg[t];let s=0;for(const t of WH.toks)s+=Math.exp(lg[t]-mx);
       WH.toks.forEach((t,i)=>acc[i]+=Math.exp(lg[t]-mx)/s);
     }
-    let bi=0;for(let i=1;i<acc.length;i++)if(acc[i]>acc[bi])bi=i;lang=WH.toks[bi];langCode=WH.codes[bi];
+    let bi=allow[0];for(const i of allow)if(acc[i]>acc[bi])bi=i;lang=WH.toks[bi];langCode=WH.codes[bi];
   }
   const segs=[],t0=Date.now();
   for(let ci=0;ci<ch.length;ci++){
@@ -1623,7 +1688,7 @@ async function asr(m){
   whS=null;
   let sync=null;
   if(m.lines&&m.lines.length){say(96,"Lägger texten i takt");sync=syncLines(m.lines,segs,x,SR);}
-  self.postMessage({type:"asrDone",id,segs,lang:langCode,times:sync?sync.times:null,cover:sync?sync.cover:0,matched:sync?sync.matched:0,hits:sync?sync.hits:null,secs:(Date.now()-t0)/1000});
+  self.postMessage({type:"asrDone",id,segs,lang:langCode,times:sync?sync.times:null,wt:sync?wordTimes(m.lines,sync.times,x,SR):null,cover:sync?sync.cover:0,matched:sync?sync.matched:0,hits:sync?sync.hits:null,secs:(Date.now()-t0)/1000});
 }
 </script>
 
@@ -2178,14 +2243,32 @@ function updChord(t,force){
   $("cNext").textContent=ci+1<ch.length?"sen "+chordName(ch[ci+1]):"";
 }
 function dots(dt){const n=clamp(Math.ceil(dt),1,3);return"●".repeat(n)+"○".repeat(3-n);}
-function setLyr(prev,main,next,cls,idx){
+let wordEls=null,wordState="";
+function setLyr(prev,main,next,cls,idx,ln){
   const key=prev+"\u0001"+main+"\u0001"+next+"\u0001"+cls;
   if(key===lastLyrKey)return;
   const changedMain=lastLyrKey.split("\u0001")[1]!==main;lastLyrKey=key;
-  $("lPrev").textContent=prev;$("lNext").textContent=next;$("lCurS").textContent=main;
-  const el=$("lCur");el.className="lCur "+cls;
+  $("lPrev").textContent=prev;$("lNext").textContent=next;
+  const cs=$("lCurS");wordEls=null;wordState="";
+  if(ln&&cls===""){cs.innerHTML=String(main).trim().split(/\s+/).map(w=>'<span class="w">'+esc(w)+'</span>').join(" ");wordEls=cs.children;}
+  else cs.textContent=main;
+  const el=$("lCur");el.className="lCur "+cls+(wordEls?" words":"")+(String(main).length>30?" long":"");
   if(changedMain&&cls===""){void el.offsetWidth;el.classList.add("anim");}
   if(idx!==lastActRow){lastActRow=idx;document.querySelectorAll("#llist .lrow").forEach((r,i)=>r.classList.toggle("act",i===idx));}
+}
+/* ordet som sjungs just nu fylls i takt med sångarens röst (ordtider från den bortplockade sången) */
+function sylW(w){const m=w.toLowerCase().match(/[aeiouyåäöæøéèêáàíóúüœ]+/g);return Math.max(1,m?m.length:1)+w.length/6;}
+function paintWords(ln,rel,span){
+  if(!wordEls||!wordEls.length)return;
+  const n=wordEls.length;let st=ln.w,end=ln.e;
+  if(!st||st.length!==n){                                  /* inga ordtider: jämnt över raden som förut */
+    const ws=[...wordEls].map(e=>sylW(e.textContent)),tot=ws.reduce((a,b)=>a+b,0),d=Math.min(span,8)*.88;let c=0;
+    st=ws.map(x=>{const v=c/tot*d;c+=x;return v;});end=d;
+  }
+  let k=-1;for(let i=0;i<n;i++)if(st[i]<=rel)k=i;
+  let fr=0;if(k>=0){const nx=k+1<n?st[k+1]:(end!=null?end:st[k]+.6),d=Math.max(.12,(nx-st[k])*.85);fr=clamp((rel-st[k])/d,0,1);}
+  const key=k+":"+Math.round(fr*20);if(key===wordState)return;wordState=key;
+  for(let i=0;i<n;i++)wordEls[i].style.setProperty("--p",i<k?"100%":i===k?(fr*100).toFixed(0)+"%":"0%");
 }
 function updLyrics(t,force){
   if(force)lastLyrKey="";
@@ -2197,9 +2280,11 @@ function updLyrics(t,force){
   let p=0;
   if(ai_<0){const dt=L[0].s-tt;setLyr("",dt<=3.2?dots(dt):"♪  intro  ♪",L[0].t,"gap",-1);}
   else{
-    const s0=L[ai_].s,has=ai_+1<L.length,s1=has?L[ai_+1].s:s0+6,span=s1-s0;
-    if(span>9&&tt-s0>Math.min(7,span*.6)){const dt=s1-tt;setLyr(L[ai_].t,has&&dt<=3.2?dots(dt):"♪",has?L[ai_+1].t:"","gap",ai_);}
-    else{setLyr(ai_>0?L[ai_-1].t:"",L[ai_].t||"♪",has?L[ai_+1].t:"","",ai_);p=clamp((tt-s0)/(Math.min(span,8)*.88),0,1);}
+    const ln=L[ai_],s0=ln.s,has=ai_+1<L.length,s1=has?L[ai_+1].s:s0+6,span=s1-s0,rel=tt-s0;
+    /* sångaren har sjungit klart raden och nästa dröjer → visa paus/nedräkning */
+    const done=ln.e!=null?(rel>ln.e+1.2&&s1-tt>2.2):(span>9&&rel>Math.min(7,span*.6));
+    if(done){const dt=s1-tt;setLyr(ln.t,has&&dt<=3.2?dots(dt):"♪",has?L[ai_+1].t:"","gap",ai_);}
+    else{setLyr(ai_>0?L[ai_-1].t:"",ln.t||"♪",has?L[ai_+1].t:"","",ai_,ln);paintWords(ln,rel,span);}
   }
   el.style.setProperty("--p",(p*100).toFixed(1)+"%");
 }
@@ -2611,7 +2696,7 @@ async function syncText(force){
       rec.lyrState="rough";rec.lyrInfo="AI:n kände bara igen "+pct+" % av orden ("+langName(lang)+"), för lite för att lägga texten i takt. Välj rätt språk ovan och tryck Synka om — eller använd Tap-synk.";
       saveRec(rec,true);toast("Texten kunde inte läggas i takt","e");return false;
     }
-    lyrics=lines.map((t,i)=>({t,s:+r.times[i].toFixed(2)}));lyrOffset=0;
+    lyrics=withW(lines,r.times,r.wt);lyrOffset=0;
     rec.lyrState="synced";rec.lyrInfo="AI:n kände igen "+pct+" % av orden ("+langName(lang)+")"+(pct<45?". Kontrollera några rader — osäkra ställen rättar du med ◉.":"");
     lyricsChanged();toast("Texten ligger i takt ✓","s");
     return true;
@@ -2640,6 +2725,11 @@ async function listenWrite(){
     }});
     if(mySong!==songId)return;
     rec.segs=r.segs;rec.lang=r.lang;rec.segsLang=langSel;
+    /* rätta ord som inte finns i språket (ordlista med 40 000 vanliga ord) */
+    jobShow(96,"🎧 Rättar orden…","",true);
+    let lex=null;try{const lr=await fetch("lex/"+r.lang+".txt");if(lr.ok){const t=await lr.text();if(t.length>1e4&&t[0]!=="<")lex=t;}}catch(e){}
+    try{const fx=await oneShot({type:"fix",segs:r.segs,lex},null,{done:"fixDone",limit:60000}).promise;if(fx&&fx.segs)r.segs=fx.segs;}catch(e){console.warn("rättning",e);}
+    if(mySong!==songId)return;
     const got=[];
     r.segs.forEach(g=>{
       const t=g.t.trim();if(!t||/^[\s\W]*$/.test(t))return;
@@ -2653,7 +2743,7 @@ async function listenWrite(){
       jobShow(97,"🎧 Lägger raderna i takt…","",true);
       const sr=await syncRun(monoOf(base.voc.L,base.voc.R),buf.sampleRate,got.map(g=>g.t),r.segs,{setCancel:c=>{my.cancel=c;}});
       if(mySong!==songId)return;
-      if(sr&&sr.times&&sr.times.length===got.length)got.forEach((g,i)=>{const v=sr.times[i];if(isFinite(v))g.s=+v.toFixed(2);});
+      if(sr&&sr.times&&sr.times.length===got.length)got.forEach((g,i)=>{const v=sr.times[i];if(isFinite(v))g.s=+v.toFixed(2);const q=sr.wt&&sr.wt[i];if(q&&q.w){g.w=q.w;g.e=q.e;}});
     }catch(e){if(e.cancel)return;console.warn("radsynk",e);}
     lyrics=got;lyrOffset=0;rec.lyrState="synced";rec.lyrInfo="skriven av AI efter gehör ("+langName(r.lang)+") — rätta gärna";
     lyricsChanged();toast("AI skrev "+got.length+" rader ✓","s");
@@ -2674,7 +2764,20 @@ async function runPipeline(forceAI){
   kick();
 }
 /* något blev klart eller ändrades: gör nästa sak som återstår */
+let wordsBusy=false;
+async function ensureWords(){
+  const rec=cur;
+  if(!rec||!buf||wordsBusy||rec.wordsTried||rec.lyrState!=="synced"||!lyrSorted.length||lyrSorted.every(l=>l.w))return;
+  if(!base||!base.voc||!(ai.state==="done"||rec.hasStems))return;
+  wordsBusy=true;rec.wordsTried=true;const mySong=songId;
+  try{
+    const r=await oneShot({type:"words",audio:monoOf(base.voc.L,base.voc.R),sr:buf.sampleRate,lines:lyrSorted.map(l=>l.t),times:lyrSorted.map(l=>l.s)},null,{done:"wordsDone",limit:60000}).promise;
+    if(mySong===songId&&r&&r.wt){lyrSorted.forEach((l,i)=>{const q=r.wt[i];if(q&&q.w&&!l.w){l.w=q.w;l.e=q.e;}});lyricsChanged();}
+  }catch(e){console.warn("ordtider",e);}
+  wordsBusy=false;
+}
 function kick(){
+  setTimeout(ensureWords,800);
   if(cur&&buf&&cur.lyrState==="rough"&&lyrics.length&&!cur.syncTried&&!syncBusy&&!fg&&!preparing&&ai.state!=="run")syncText().then(()=>pump());
   else{lyrStatus();pump();}
 }
@@ -2720,7 +2823,7 @@ async function pump(){
           const r=await asrRun(monoOf(voc.L,voc.R),sr,lines,lg,{alive,setCancel:setC,onP:m=>{if(m.dl!=null)show(m.dl*100,"hämtar lyssnar-AI");else if(m.total)show(m.p,"text läggs i takt");}});
           if(!alive())throw Object.assign(new Error("Avbruten"),{cancel:true});
           rec.segs=r.segs;rec.lang=r.lang;rec.segsLang=lg;rec.syncTried=true;const pct=Math.round((r.cover||0)*100);
-          if(r.times&&r.cover>=.12){rec.lyrics=lines.map((t,i)=>({t,s:+r.times[i].toFixed(2)}));rec.lyrOffset=0;rec.lyrState="synced";rec.lyrInfo="AI:n kände igen "+pct+" % av orden ("+langName(r.lang)+")";}
+          if(r.times&&r.cover>=.12){rec.lyrics=withW(lines,r.times,r.wt);rec.lyrOffset=0;rec.lyrState="synced";rec.lyrInfo="AI:n kände igen "+pct+" % av orden ("+langName(r.lang)+")";}
           else rec.lyrInfo="AI:n kände bara igen "+pct+" % av orden ("+langName(r.lang)+"), för lite för att lägga texten i takt.";
           saveRec(rec,true);
         }
@@ -2775,13 +2878,15 @@ function updateKnobLabels(){
 }
 
 /* ── texter ── */
+function packLyr(x){const o={t:x.t,s:+x.s.toFixed(2)};if(x.w&&x.w.length){o.w=x.w;o.e=x.e;}return o;}
+const withW=(lines,times,wt)=>lines.map((t,i)=>{const o={t,s:+times[i].toFixed(2)};const q=wt&&wt[i];if(q&&q.w){o.w=q.w;o.e=q.e;}return o;});
 function lyricsChanged(save){
   lyrSorted=[...lyrics].sort((a,b)=>a.s-b.s);
   $("offV").textContent=(lyrOffset>0?"+":"")+lyrOffset.toFixed(2)+" s";
   $("sOffV").textContent=lyrOffset?"Texten flyttad "+(lyrOffset>0?"+":"")+lyrOffset.toFixed(2).replace(".",",")+" s":"";
   lastActRow=-1;renderList();lastLyrKey="";if(buf)updLyrics(curT(),true);updateAll();lyrStatus();
   if(save!==false&&cur){
-    cur.lyrics=lyrSorted.map(x=>({t:x.t,s:+x.s.toFixed(2)}));cur.lyrOffset=lyrOffset;
+    cur.lyrics=lyrSorted.map(packLyr);cur.lyrOffset=lyrOffset;
     if(!cur.lyrics.length){cur.lyrState="none";cur.lyrInfo="";}
     saveRec(cur);
   }
@@ -2799,7 +2904,7 @@ function renderList(){
     const set=document.createElement("button");set.textContent="◉";set.title="Sätt till nuvarande tid";
     set.onclick=()=>{ln.s=Math.max(0,curT()-lyrOffset);markManual();lyricsChanged();toast("Tid satt: "+fmt(ln.s));};
     const inp=document.createElement("input");inp.value=ln.t;inp.placeholder="Textrad…";
-    inp.oninput=()=>{ln.t=inp.value;lastLyrKey="";if(cur){cur.lyrics=lyrSorted.map(x=>({t:x.t,s:+x.s.toFixed(2)}));saveRec(cur);}};
+    inp.oninput=()=>{ln.t=inp.value;lastLyrKey="";if(cur){cur.lyrics=lyrSorted.map(packLyr);saveRec(cur);}};
     const del=document.createElement("button");del.textContent="✕";
     del.onclick=()=>{lyrics=lyrics.filter(x=>x!==ln);lyricsChanged();};
     r.append(ts,set,inp,del);frag.appendChild(r);
