@@ -466,6 +466,16 @@ body.stage .stageText .now{background:var(--sig)}
 body.stage .stageText .sOff{grid-column:1/-1;text-align:center;font-size:12px;font-weight:600;color:var(--mid);min-height:15px}
 body.stage .screen{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 180px)}
 body.stage #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 186px)}
+
+/* mät hörlurarnas fördröjning */
+.calib{position:fixed;z-index:95;left:16px;right:16px;max-width:420px;margin:0 auto;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 18px 18px;border-radius:14px;text-align:center;
+  background:var(--glass2);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border:var(--bw) solid var(--ink);box-shadow:var(--hard2)}
+.calib .cT{font-size:20px;font-weight:800;font-stretch:115%}
+.calib .cS{font-size:13px;color:var(--mid);line-height:1.5;max-width:30ch}
+.calib .cTap{width:100%;padding:34px 0;font-size:22px}
+.calib .cD{font-size:20px;letter-spacing:.3em;color:var(--sig);min-height:26px}
+.calib .sb{flex:none;padding:10px 22px}
 </style>
 </head>
 <body>
@@ -745,6 +755,7 @@ body.stage #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 186px)}
       <button class="btn" id="bMic">Slå på mikrofonen</button>
       <div id="micCtl" hidden>
         <div class="tgl"><div class="tx"><b>Hör mig själv</b><small>Använd hörlurar, annars rundgång</small></div><div class="sw" id="swMon"></div></div>
+        <div class="note" id="monNote" hidden></div>
         <div class="sl"><div class="slT"><span>Eko</span><span id="echoV">30%</span></div><input type="range" id="rEcho" min="0" max="100" value="30"></div>
         <div class="sl"><div class="slT"><span>Mikrofonvolym</span><span id="micVolV">100%</span></div><input type="range" id="rMicVol" min="0" max="200" value="100"></div>
       </div>
@@ -775,6 +786,12 @@ body.stage #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 186px)}
       <div class="tgl" style="margin-top:8px"><div class="tx"><b>Dammpartiklar</b><small>Svävar i bakgrunden och rör sig med musiken</small></div><div class="sw" id="swFx"></div></div>
     </div>
     <div class="blk">
+      <div class="bh">Hörlurar</div>
+      <div class="status" id="latSt" style="margin-top:0"></div>
+      <button class="btn sec" id="bCalib" style="margin-top:12px">Mät fördröjningen</button>
+      <div class="note">Trådlösa hörlurar spelar upp ljudet en bit efter telefonen. Appen räknar med det, så att text, sångcoach och inspelning ligger i takt. Mät om du byter hörlurar eller om texten känns sen.</div>
+    </div>
+    <div class="blk">
       <div class="bh">Lagring</div>
       <div class="note" id="storeNote" style="margin-top:0">—</div>
     </div>
@@ -789,6 +806,14 @@ body.stage #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 186px)}
   <div style="flex:1;min-width:0"><div class="tt">Tap-synk</div><div class="tl" id="tapLine"></div><div class="tc" id="tapCount"></div></div>
   <button class="tapBig" id="bTap">TAP</button>
   <button class="iconBtn" id="bTapX" title="Stäng"><svg class="ic"><use href="#icX"/></svg></button>
+</div>
+
+<div class="calib" id="calib" hidden>
+  <div class="cT">Tryck i takt med klicken</div>
+  <div class="cS" id="calSub">Sätt i hörlurarna. Tryck på knappen exakt när du hör varje klick.</div>
+  <button class="tapBig cTap" id="bCalTap">TRYCK</button>
+  <div class="cD" id="calDots"></div>
+  <button class="hw sb" id="bCalX">Avbryt</button>
 </div>
 
 <div id="toast"></div>
@@ -2025,7 +2050,11 @@ function fillCurve(t,T){                                   /* från låttid t ti
 function effGain(ch){const any=solo.voc||solo.inst||solo.click;if(any)return solo[ch]?mix[ch]:0;return mute[ch]?0:mix[ch];}
 function gainFor(ch){return ch==="orig"?1:effGain(ch);}
 function applyGains(){if(!nodes)return;nodes.forEach(n=>{n.g.gain.setTargetAtTime(gainFor(n.ch),AC.currentTime,.015);if(n.g2)n.g2.gain.setTargetAtTime(fillAmt(),AC.currentTime,.05);});}
-function heardCtx(){
+let latX=LS.get("ks_latx",0);                             /* uppmätt extra fördröjning utöver det telefonen rapporterar */
+function heardCtx(){return heardRaw()-latX;}
+function outLat(){return AC?Math.max(0,AC.currentTime-heardCtx()):0;}
+function micLat(){try{const t=mic&&mic.stream.getAudioTracks()[0],l=t&&t.getSettings().latency;if(l>0&&l<1)return l;}catch(e){}return .02;}
+function heardRaw(){
   try{
     if(AC.getOutputTimestamp){const o=AC.getOutputTimestamp();
       if(o&&o.contextTime>0&&o.performanceTime>0){const t=o.contextTime+(performance.now()-o.performanceTime)/1000;if(Math.abs(t-AC.currentTime)<1)return t;}}
@@ -2923,6 +2952,13 @@ function stopMic(){
   mic=null;$("bMic").textContent="Slå på mikrofonen";$("bMic").classList.remove("sec");$("micCtl").hidden=true;
   if(coachOn)$("swCoach").click();
 }
+function latStatus(){
+  if(!AC){$("latSt").textContent="Fördröjningen mäts när du spelar en låt.";$("monNote").hidden=true;return;}
+  const ms=Math.round(outLat()*1000);
+  $("latSt").textContent="Fördröjning just nu: "+ms+" ms"+(latX?" (varav "+Math.round(latX*1000)+" ms uppmätt av dig)":"")+(ms>120?" — trådlöst":"");
+  const n=$("monNote");n.hidden=!(ms>120);
+  n.innerHTML="<b>Hörlurarna är "+ms+" ms efter.</b> Din egen röst kommer då som ett eko i örat. Det går inte att få bort i appen. Sjung hellre utan \"Hör mig själv\", använd hörlurar med sladd eller slå på hörlurarnas spelläge (Galaxy Buds: Galaxy Wearable → Labs → Spelläge).";
+}
 $("swMon").onclick=()=>{monOn=!monOn;$("swMon").classList.toggle("on",monOn);if(mic)mic.mon.gain.setTargetAtTime(monOn?1:0,AC.currentTime,.02);};
 $("rEcho").oninput=e=>{echo=e.target.value/100;$("echoV").textContent=e.target.value+"%";if(mic)mic.wet.gain.value=echo;};
 $("rMicVol").oninput=e=>{micVol=e.target.value/100;$("micVolV").textContent=e.target.value+"%";if(mic)mic.gain.gain.value=micVol;};
@@ -2953,8 +2989,9 @@ function targetMidi(t){
 }
 function coachStep(t){
   mic.an.getFloatTimeDomainData(mic.buf);
-  const f=yin(mic.buf,AC.sampleRate),mm=f?69+12*Math.log2(f/440):0,tg=playing?targetMidi(t):0;
+  const tc=t-micLat()-.023,f=yin(mic.buf,AC.sampleRate),mm=f?69+12*Math.log2(f/440):0,tg=playing?targetMidi(tc):0;
   let shown=mm;if(mm&&tg)shown=mm-12*Math.round((mm-tg)/12);
+  t-=micLat()+.023;
   hist.push({t,m:shown});while(hist.length&&(hist[0].t>t||t-hist[0].t>4))hist.shift();
   if(playing&&tg){tot++;if(mm&&Math.abs(shown-tg)<=1)hit++;}
   $("coachNote").textContent=mm?NOTE[((Math.round(mm)%12)+12)%12]:"—";
@@ -2979,14 +3016,15 @@ $("bRec").onclick=()=>{
   if(!buf){toast("Öppna en låt först","e");return;}
   if(rec){rec.mr.stop();return;}
   if(typeof MediaRecorder==="undefined"){toast("Inspelning stöds inte i den här webbläsaren","e");return;}
-  const A=getAC(),dest=A.createMediaStreamDestination();bus.connect(dest);if(mic)mic.out.connect(dest);
+  const A=getAC(),dest=A.createMediaStreamDestination(),dly=A.createDelay(2);
+  dly.delayTime.value=Math.min(1.9,outLat()+(mic?micLat():0));bus.connect(dly);dly.connect(dest);if(mic)mic.out.connect(dest);
   const types=["audio/mp4","audio/webm;codecs=opus","audio/webm"];
   const mt=types.find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))||"";
   let mr;try{mr=new MediaRecorder(dest.stream,mt?{mimeType:mt}:undefined);}catch(e){toast("Kunde inte starta inspelning","e");return;}
   const parts=[];
   mr.ondataavailable=e=>{if(e.data&&e.data.size)parts.push(e.data);};
   mr.onstop=()=>{
-    try{bus.disconnect(dest);}catch(e){}try{if(mic)mic.out.disconnect(dest);}catch(e){}
+    try{bus.disconnect(dly);dly.disconnect();}catch(e){}try{if(mic)mic.out.disconnect(dest);}catch(e){}
     const type=mr.mimeType||mt||"audio/webm",blob=new Blob(parts,{type}),url=URL.createObjectURL(blob),ext=/mp4/.test(type)?"m4a":"webm";
     const it=document.createElement("div");it.className="recItem";
     const au=document.createElement("audio");au.controls=true;au.src=url;
@@ -3029,8 +3067,38 @@ function dl(blob,name){const a=document.createElement("a");a.href=URL.createObje
 /* ── ark, scenläge, status ── */
 function openSheet(id){
   $("sheetWrap").classList.add("on");document.querySelectorAll(".sheet").forEach(s=>s.classList.toggle("on",s.id===id));
-  if(id==="sh-mix"){syncMixUI();aiStatus();}if(id==="sh-lib")renderLib();if(id==="sh-text")lyrStatus();if(id==="sh-more")storeInfo();
+  if(id==="sh-mix"){syncMixUI();aiStatus();}if(id==="sh-lib")renderLib();if(id==="sh-text")lyrStatus();if(id==="sh-more"){storeInfo();latStatus();}if(id==="sh-sing")latStatus();
 }
+/* mät hörlurarnas fördröjning: 12 klick, du trycker i takt, vi jämför när du tryckte med när telefonen tror att klicket hördes */
+let cal=null;
+$("bCalib").onclick=()=>{
+  closeSheet();if(playing)pause();
+  const A=getAC(),N=12,gap=.6,start=A.currentTime+1.2,taps=[],exp=[];
+  const pn=performance.now(),hr=heardRaw();
+  for(let i=0;i<N;i++){
+    const c=start+i*gap,o=A.createOscillator(),g=A.createGain();
+    o.frequency.value=i%4?1000:1500;g.gain.setValueAtTime(0,c);g.gain.linearRampToValueAtTime(.6,c+.002);g.gain.exponentialRampToValueAtTime(.001,c+.05);
+    o.connect(g);g.connect(A.destination);o.start(c);o.stop(c+.06);
+    exp.push(pn+(c-hr)*1000);                              /* när klicket borde höras enligt telefonen */
+  }
+  $("calDots").textContent="";$("calSub").textContent="Sätt i hörlurarna. Tryck på knappen exakt när du hör varje klick.";$("calib").hidden=false;
+  const end=setTimeout(()=>finish(),(start-A.currentTime+N*gap+.6)*1000);
+  cal={taps,exp,end};
+  function finish(){
+    if(!cal)return;const d=[];
+    cal.taps.forEach(t=>{let bi=-1,bd=1e9;cal.exp.forEach((e,i)=>{if(i<2)return;const x=Math.abs(t-e);if(x<bd){bd=x;bi=i;}});if(bi>=0&&bd<gap*1000*.5)d.push(t-cal.exp[bi]);});
+    cal=null;
+    if(d.length<5){$("calSub").textContent="För få tryck. Försök igen och tryck på varje klick.";setTimeout(()=>{$("calib").hidden=true;},2600);return;}
+    d.sort((a,b)=>a-b);const med=d[d.length>>1],mad=d.map(x=>Math.abs(x-med)).sort((a,b)=>a-b)[d.length>>1];
+    if(mad>80){$("calSub").textContent="Trycken var för ojämna. Försök igen och tryck lugnt i takt.";setTimeout(()=>{$("calib").hidden=true;},2600);return;}
+    latX=Math.max(-.1,Math.min(.6,med/1000));LS.set("ks_latx",latX);
+    $("calib").hidden=true;lastLyrKey="";if(buf)updLyrics(curT(),true);
+    toast("Fördröjningen är "+Math.round(outLat()*1000)+" ms — texten justeras efter det","s");
+  }
+  cal.finish=finish;
+};
+$("bCalTap").addEventListener("pointerdown",e=>{e.preventDefault();if(!cal)return;cal.taps.push(e.timeStamp||performance.now());$("calDots").textContent+="●";});
+$("bCalX").onclick=()=>{if(cal){clearTimeout(cal.end);cal=null;}$("calib").hidden=true;};
 function closeSheet(){$("sheetWrap").classList.remove("on");document.querySelectorAll(".sheet").forEach(s=>s.classList.remove("on"));}
 document.querySelectorAll(".dock button").forEach(b=>b.onclick=()=>openSheet(b.dataset.sh));
 $("sheetBg").onclick=closeSheet;document.querySelectorAll("[data-close]").forEach(b=>b.onclick=closeSheet);
