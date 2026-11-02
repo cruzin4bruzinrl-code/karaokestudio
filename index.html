@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0a2853">
+<meta name="theme-color" content="#140f0b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>KaraokeStudio</title>
@@ -13,231 +13,314 @@
 <style>
 @font-face{font-family:"Archivo";src:url("fonts/archivo.woff") format("woff");font-weight:400 900;font-stretch:100% 125%;font-display:swap}
 @font-face{font-family:"Caveat";src:url("fonts/caveat.woff") format("woff");font-weight:600 700;font-display:swap}
-/* KaraokeStudio – kassettdäcket på ritbordet
-   Ritning (bakgrund, mått, linjer) · glas (kassettskal, docka, ark) · neobrutalism (tangenter, etikett, hårda skuggor) · damm (partiklar som följer musiken) */
+/* KaraokeStudio KS-1 — en bandspelare på skrivbordet. Låtarna är kassetter i hyllan under. */
 :root{
-  --bp:#0f3672; --bp2:#0a2853; --bp3:#123f82;
-  --grid:rgba(170,205,255,.07); --grid2:rgba(170,205,255,.15);
-  --line:rgba(222,236,255,.62); --line2:rgba(222,236,255,.28); --line3:rgba(222,236,255,.14);
-  --ink:#06142e; --paper:#eef3fa; --paper2:#d9e3f1;
-  --sig:#ffd23f; --sig2:#f2b705; --rec:#ff5b3a;
-  --txt:#f3f7ff; --mid:#b3c6e4; --dim:#7e97be;
-  --glass:rgba(12,38,84,.52); --glass2:rgba(10,32,72,.78);
-  --bw:2.5px; --hard:4px 4px 0 var(--ink); --hard2:6px 6px 0 var(--ink);
-  /* äldre namn som appens skript använder */
-  --acc:var(--sig); --acc2:var(--sig); --vio:var(--paper); --glow:rgba(255,210,63,.35); --amb:var(--sig);
+  --ink:#151311; --paper:#efede8; --paper2:#cfccc5;
+  --sig:#ffb43a; --sig2:#e08a12; --rec:#e5432d;
+  --vfd:#ffb43a; --vfdHi:#ffe2a6; --vfdDim:rgba(255,180,58,.34);
+  --txt:#f4ede3; --mid:#c2b4a0; --dim:#8d806e;
+  --line:rgba(255,236,210,.45); --line2:rgba(255,236,210,.2); --line3:rgba(255,236,210,.1); --grid:transparent;
+  --glass:rgba(32,27,23,.7); --glass2:rgba(30,26,22,.96);
+  --bw:1.5px; --hard:0 2px 0 #0b0a09,0 6px 14px rgba(0,0,0,.45); --hard2:0 3px 0 #0b0a09,0 14px 34px rgba(0,0,0,.6);
+  --acc:var(--sig); --acc2:var(--sig); --vio:var(--paper); --glow:rgba(255,170,40,.4); --amb:var(--sig);
   --spring:cubic-bezier(.34,1.56,.64,1); --ease:cubic-bezier(.2,0,0,1); --smooth:cubic-bezier(.4,0,.2,1);
   --f:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --hand:"Caveat","Segoe Print","Bradley Hand",cursive;
+  --alu:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 1px,rgba(0,0,0,.035) 1px 2px,transparent 2px 3px),
+        linear-gradient(180deg,#e6e7e6 0%,#c9cbcb 45%,#acb0b2 100%);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
-html,body{min-height:100%}
-html{background:var(--bp2)}
-body{font-family:var(--f);font-stretch:100%;color:var(--txt);font-size:14px;-webkit-font-smoothing:antialiased;overflow-x:hidden;
-  background:
-    linear-gradient(var(--grid2) 1px,transparent 1px) 0 0/80px 80px,
-    linear-gradient(90deg,var(--grid2) 1px,transparent 1px) 0 0/80px 80px,
-    linear-gradient(var(--grid) 1px,transparent 1px) 0 0/16px 16px,
-    linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/16px 16px,
-    radial-gradient(120% 80% at 50% 0%,var(--bp3),var(--bp) 45%,var(--bp2));
-  background-attachment:fixed}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+html{background:#120d0a}
+body{position:fixed;inset:0;font-family:var(--f);color:var(--txt);font-size:14px;-webkit-font-smoothing:antialiased;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  background:radial-gradient(110% 55% at 50% -8%,#4b3524 0%,#2a1e15 42%,#140f0b 100%)}
+input,textarea{font-family:inherit;-webkit-user-select:text;user-select:text}
 button{font-family:inherit;color:inherit}
-input,textarea{font-family:inherit}
-:focus-visible{outline:2.5px solid var(--sig);outline-offset:3px}
+:focus-visible{outline:2px solid var(--sig);outline-offset:3px}
 svg.ic,svg.di{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 svg.ic .fill,svg.di .fill{fill:currentColor;stroke:none}
 #fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
-
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
-@keyframes popIn{from{opacity:.2;transform:translateY(6px)}to{opacity:1;transform:none}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes popIn{from{opacity:.25;transform:translateY(5px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes stripes{to{background-position:28px 0}}
+@keyframes cassIn{0%{transform:translate(-50%,-70px) rotate(-3deg);opacity:0}70%{transform:translate(-50%,4px)}100%{transform:translate(-50%,0);opacity:1}}
+@keyframes cassOut{to{transform:translate(-50%,-90px) rotate(4deg);opacity:0}}
+@keyframes doorPulse{0%,100%{box-shadow:inset 0 3px 14px rgba(0,0,0,.9),0 0 0 2px rgba(255,180,58,.0)}50%{box-shadow:inset 0 3px 14px rgba(0,0,0,.9),0 0 0 2px rgba(255,180,58,.55),0 0 22px rgba(255,170,40,.35)}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-.app{position:relative;z-index:1;max-width:460px;margin:0 auto;
-  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px calc(env(safe-area-inset-bottom,0px) + 110px)}
+.app{position:relative;z-index:1;height:100%;max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:10px;
+  padding:calc(env(safe-area-inset-top,0px) + 8px) 12px calc(env(safe-area-inset-bottom,0px) + 8px)}
 
-/* ── huvud ── */
-.top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 12px;padding:2px 2px 16px}
-.logo{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800;font-stretch:118%;letter-spacing:-.2px}
-.logo .mk{width:34px;height:24px;fill:var(--sig);stroke:var(--ink);stroke-width:2.2}
-.logo .mk .w{fill:var(--ink)}
-.logo .mk circle{fill:var(--paper);stroke:var(--ink)}
-.steps{display:flex;gap:12px}
-@media (max-width:440px){.steps{width:100%;padding-left:2px}}
+/* huvud: märkesskylt + lampor */
+.top{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 2px}
+.logo{display:flex;align-items:baseline;gap:7px}
+.badge{font-size:16px;font-weight:800;font-stretch:120%;letter-spacing:.2px;color:#f1e3cc;text-shadow:0 1px 0 #000}
+.model{font-size:10.5px;font-weight:700;color:var(--dim);letter-spacing:.08em}
+.steps{display:flex;gap:10px}
 .st{display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:var(--dim);white-space:nowrap}
-.st i{width:10px;height:10px;border:1.5px solid var(--line2);border-radius:2px;transition:background .3s,border-color .3s}
-.st.on{color:var(--txt)}
-.st.on i{background:var(--sig);border-color:var(--ink);box-shadow:1.5px 1.5px 0 var(--ink)}
+.st i{width:7px;height:7px;border-radius:50%;background:#3b2a1f;box-shadow:inset 0 1px 1px rgba(0,0,0,.7)}
+.st.on{color:var(--mid)}
+.st.on i{background:var(--vfd);box-shadow:0 0 6px var(--vfd),0 0 2px #fff6}
 
-/* ── kassetten ── */
-.device{position:relative}
-.screen{position:relative;border-radius:18px;padding:14px 14px 0;overflow:hidden;
-  background:linear-gradient(160deg,rgba(255,255,255,.13),rgba(255,255,255,.03) 40%,rgba(0,10,30,.18)),var(--glass);
-  -webkit-backdrop-filter:blur(14px) saturate(140%);backdrop-filter:blur(14px) saturate(140%);
-  border:var(--bw) solid var(--ink);box-shadow:var(--hard2),inset 0 0 0 1px rgba(255,255,255,.14)}
+/* ── textfönstret (VFD-display) ── */
+.screen{position:relative;flex:1;min-height:132px;display:flex;flex-direction:column;border-radius:14px;padding:10px 12px 6px;overflow:hidden;
+  background:radial-gradient(rgba(255,180,58,.045) .8px,transparent 1.1px) 0 0/4px 4px,linear-gradient(180deg,#0d0b09,#050404);
+  box-shadow:inset 0 2px 16px rgba(0,0,0,.95),0 0 0 5px #1c1815,0 0 0 6px #3b332b,0 10px 26px rgba(0,0,0,.55)}
 .screen::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
-  background:linear-gradient(115deg,rgba(255,255,255,.10),transparent 30%)}
-.screw{position:absolute;width:11px;height:11px;border-radius:50%;background:var(--paper2);border:1.5px solid var(--ink);z-index:2}
-.screw::after{content:"";position:absolute;left:1.5px;right:1.5px;top:3.2px;height:1.6px;background:var(--ink);transform:rotate(35deg)}
-.screw.a{left:6px;top:6px}.screw.b{right:6px;top:6px}.screw.c{left:6px;bottom:6px}.screw.d{right:6px;bottom:6px}
-
-/* papperslappen på kassetten */
-.label{position:relative;background:var(--paper);color:var(--ink);border:var(--bw) solid var(--ink);border-radius:8px;
-  padding:12px 12px 10px 40px;box-shadow:3px 3px 0 var(--ink)}
-.label::before{content:"";position:absolute;left:0;right:0;bottom:0;height:7px;border-radius:0 0 5px 5px;
-  background:linear-gradient(90deg,var(--sig) 0 70%,var(--rec) 70%)}
-.label .side{position:absolute;left:9px;top:9px;width:22px;height:24px;display:grid;place-items:center;
-  font-weight:900;font-size:15px;font-stretch:125%;background:var(--ink);color:var(--paper);border-radius:3px}
-
-.scrEmpty{position:relative;padding:6px 6px 0}
-.bigLoad{cursor:pointer;padding:16px 14px 20px 44px;transition:transform .15s var(--smooth),box-shadow .15s}
-.bigLoad:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
-.bigLoad.over{background-color:#fff6d1}
-.bigLoad input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;z-index:3}
-.bigLoad b{display:block;font-family:var(--hand);font-size:32px;font-weight:700;line-height:1;margin-bottom:8px}
-.bigLoad small{display:block;font-size:12.5px;line-height:1.5;color:#33456a}
-
-.scrMain{position:relative}
-.scrTop{display:flex;align-items:center;gap:8px;min-height:62px}
+  background:linear-gradient(168deg,rgba(255,255,255,.075),transparent 32%)}
+.scrEmpty,.scrMain{flex:1;min-height:0;display:flex;flex-direction:column}
+.scrEmpty{align-items:center;justify-content:center;text-align:center}
+.emptyMsg{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--vfdDim)}
+.emptyMsg b{font-size:19px;font-weight:700;font-stretch:115%;color:var(--vfd);filter:drop-shadow(0 0 6px rgba(255,170,40,.5))}
+.emptyMsg span{font-size:13px;color:rgba(255,190,90,.55);max-width:26ch;line-height:1.45}
+.addFirst{position:relative;margin-top:8px;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;color:var(--vfd);
+  border:1px solid rgba(255,180,58,.45);cursor:pointer}
+.addFirst input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.addFirst.over{background:rgba(255,180,58,.12)}
+.scrTop{display:flex;align-items:center;gap:8px}
 .ttl{flex:1;min-width:0}
-.songT{font-family:var(--hand);font-size:27px;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.songA{font-size:11.5px;font-weight:600;color:#3a4d73;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chordBox{min-width:50px;text-align:center;padding:4px 6px;border:2px solid var(--ink);border-radius:6px;background:var(--sig)}
-.cNow{font-size:18px;font-weight:900;font-stretch:112%;line-height:1.05}
-.cNext{font-size:9.5px;font-weight:600;margin-top:1px;color:#4a3a00}
-.iconBtn{width:34px;height:34px;border-radius:7px;border:2px solid var(--ink);background:var(--paper);cursor:pointer;color:var(--ink);
-  display:grid;place-items:center;font-size:14px;flex-shrink:0;box-shadow:2px 2px 0 var(--ink);transition:transform .1s,box-shadow .1s}
-.iconBtn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
-.iconBtn svg.ic{width:17px;height:17px}
-.loopBtn{width:auto;min-width:42px;padding:0 8px;font-size:11px;font-weight:800}
-.loopBtn.set{background:#fff3c4}
-.loopBtn.on{background:var(--sig)}
+.songT{font-size:13.5px;font-weight:700;font-stretch:112%;color:var(--vfd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 8px rgba(255,170,40,.45)}
+.songA{font-size:11px;color:rgba(255,190,90,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chordBox{min-width:44px;text-align:center;padding:2px 6px;border:1px solid rgba(255,180,58,.5);border-radius:5px}
+.cNow{font-size:16px;font-weight:800;color:var(--vfd);line-height:1.1;text-shadow:0 0 8px rgba(255,170,40,.6)}
+.cNext{font-size:9px;color:rgba(255,190,90,.55)}
+.iconBtn{width:32px;height:32px;border-radius:7px;cursor:pointer;display:grid;place-items:center;flex-shrink:0;color:#1d1b19;font-size:12px;font-weight:800;
+  background:linear-gradient(180deg,#f1f0ec,#c8c6c0);border:1px solid #4b4844;box-shadow:0 2px 0 #34312d;transition:transform .08s,box-shadow .08s}
+.iconBtn:active{transform:translateY(2px);box-shadow:0 0 0 #34312d}
+.iconBtn svg.ic{width:16px;height:16px}
+.loopBtn{width:auto;min-width:40px;padding:0 7px}
+.loopBtn.set{color:#8a5200}
+.loopBtn.on{background:linear-gradient(180deg,#ffd27a,#f0a530)}
+.lyr{flex:1;min-height:0;overflow:hidden;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:7px;padding:6px 2px}
+.lyr>div{flex-shrink:0}
+.lPrev,.lNext{font-size:13.5px;color:var(--vfdDim);line-height:1.35;min-height:18px}
+.lNext{color:rgba(255,180,58,.55)}
+.lCur{font-size:23px;font-weight:700;font-stretch:108%;line-height:1.25;min-height:29px;filter:drop-shadow(0 0 7px rgba(255,160,30,.42))}
+.lCur span{background:linear-gradient(90deg,var(--vfdHi) 0%,var(--vfdHi) var(--p,0%),rgba(255,180,58,.5) var(--p,0%));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.lCur.words>#lCurS{background:none}
+.lCur.words .w{display:inline-block}
+.lCur.long{font-size:19.5px}
+.lCur.gap span{background:none;color:var(--vfd);letter-spacing:.25em}
+.lCur.hint span{background:none;color:rgba(255,190,90,.6);font-size:14.5px;font-weight:600;letter-spacing:0}
+.lCur.anim{animation:popIn .28s var(--ease)}
+@media (max-height:860px){.lyr:has(.lCur.long) .lPrev{display:none}}
+.scope{display:block;width:100%;height:22px;flex:none}
+.scope.lane{height:70px}
+.coachRow{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,190,90,.6)}
+.coachRow b{color:var(--vfd)}
 
-/* text */
-.lyr{text-align:center;padding:18px 4px 6px;min-height:150px;display:flex;flex-direction:column;justify-content:center;gap:8px}
-.lPrev,.lNext{font-size:13.5px;font-weight:500;color:rgba(222,236,255,.42);min-height:18px;line-height:1.35}
-.lNext{color:rgba(222,236,255,.7)}
-.lCur{font-size:24px;font-weight:800;font-stretch:104%;line-height:1.25;min-height:30px;letter-spacing:-.2px}
-.lCur span{background:linear-gradient(90deg,var(--sig) 0%,var(--sig) var(--p,0%),#fff var(--p,0%));
-  -webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
-.lCur.gap span{background:none;color:var(--mid);letter-spacing:.25em}
-.lCur.hint span{background:none;color:var(--mid);font-size:15px;font-weight:600;letter-spacing:0}
-.lCur.anim{animation:popIn .3s var(--ease)}
+/* ── bandspelaren ── */
+.deck{position:relative;flex:none;border-radius:16px;padding:10px 12px 10px;color:#1c1a18;background:var(--alu);
+  border:1px solid #6b6f72;box-shadow:inset 0 1px 0 rgba(255,255,255,.85),inset 0 -2px 0 rgba(0,0,0,.18),0 12px 28px rgba(0,0,0,.6)}
+.deckTop{display:flex;gap:8px;align-items:stretch}
+.vu{flex:1;min-width:0;height:44px;border-radius:7px;display:block;background:#1a1613;box-shadow:inset 0 1px 4px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.7)}
+.counter{flex:none;width:112px;border-radius:7px;padding:5px 8px;display:flex;flex-direction:column;justify-content:center;gap:2px;
+  background:#0b0908;box-shadow:inset 0 1px 6px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.7)}
+.cTime{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--vfd);text-shadow:0 0 6px rgba(255,170,40,.6);white-space:nowrap}
+.cTime i{font-style:normal;color:rgba(255,180,58,.35);margin:0 3px}
+#tDur{color:rgba(255,180,58,.55)}
+.meta{display:flex;gap:4px;flex-wrap:wrap;min-height:13px}
+.meta span{font-size:9.5px;font-weight:700;color:rgba(255,190,90,.7)}
+.meta .busy{animation:pulse 1.2s infinite}
 
-.scope{display:block;width:100%;height:30px;margin:4px 0 2px}
-.scope.lane{height:80px}
-.coachRow{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--mid);margin:2px 2px 4px}
-.coachRow b{color:var(--sig);font-size:13px}
+/* kassettluckan */
+.door{position:relative;margin-top:8px;height:112px;border-radius:11px;overflow:hidden;background:linear-gradient(180deg,#1b1714,#0d0b0a);
+  box-shadow:inset 0 3px 14px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.75);transition:box-shadow .2s}
+.door.want{animation:doorPulse 1.1s ease-in-out infinite}
+.door.over{box-shadow:inset 0 3px 14px rgba(0,0,0,.9),0 0 0 2px var(--vfd),0 0 26px rgba(255,170,40,.5)}
+.doorGlass{position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;
+  background:linear-gradient(165deg,rgba(255,255,255,.14),rgba(255,255,255,.02) 38%,rgba(0,0,0,.08) 60%,rgba(0,0,0,.25));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.doorEmpty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#8e8174}
+.doorEmpty b{font-size:14px;font-weight:700;color:#bdb0a0}
+.doorEmpty span{font-size:11.5px}
 
-/* fönstret med spolarna */
-.reelWin{position:relative;height:84px;margin:8px 22px 0;border-radius:42px;border:var(--bw) solid var(--ink);
-  background:linear-gradient(180deg,rgba(2,10,26,.55),rgba(2,10,26,.32));box-shadow:inset 0 3px 10px rgba(0,0,0,.45);overflow:hidden}
-.reelWin::after{content:"";position:absolute;inset:0;background:linear-gradient(170deg,rgba(255,255,255,.16),transparent 40%);pointer-events:none}
-.reel{position:absolute;top:50%;width:76px;height:76px;margin-top:-38px}
-.reel.l{left:10%}.reel.r{right:10%}
+/* kassetten */
+.cass{--shell:#2b2826;position:relative;border-radius:9px;background:
+  radial-gradient(circle at 7px 7px,#0006 2.2px,transparent 2.6px),radial-gradient(circle at calc(100% - 7px) 7px,#0006 2.2px,transparent 2.6px),
+  radial-gradient(circle at 7px calc(100% - 7px),#0006 2.2px,transparent 2.6px),radial-gradient(circle at calc(100% - 7px) calc(100% - 7px),#0006 2.2px,transparent 2.6px),
+  linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0) 30%,rgba(0,0,0,.18)),var(--shell);
+  border:1px solid rgba(0,0,0,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.cLbl{position:relative;display:flex;align-items:center;gap:7px;background:#f3ecdc;color:#1f1c19;border-radius:4px;
+  background-image:linear-gradient(transparent 70%,rgba(0,0,0,.08) 70%,rgba(0,0,0,.08) calc(70% + 1px),transparent calc(70% + 1px)),linear-gradient(90deg,var(--stripe,#e5432d) 0 100%);
+  background-size:100% 100%,100% 4px;background-repeat:no-repeat;background-position:0 0,0 100%}
+.cSide{flex:none;display:grid;place-items:center;width:18px;height:18px;border-radius:3px;background:#1f1c19;color:#f3ecdc;font-size:11px;font-weight:900}
+.cLbl b{flex:1;min-width:0;font-family:var(--hand);font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cLbl small{flex:none;max-width:40%;font-size:10px;color:#5b5248;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cWin{position:relative;border-radius:999px;background:linear-gradient(180deg,rgba(10,8,7,.75),rgba(10,8,7,.55));box-shadow:inset 0 2px 5px rgba(0,0,0,.6);overflow:hidden}
+.cWin::after{content:"";position:absolute;inset:0;background:linear-gradient(170deg,rgba(255,255,255,.18),transparent 45%);pointer-events:none}
+.inDeck{position:absolute;left:50%;top:9px;width:270px;height:150px;transform:translateX(-50%);padding:8px 10px;z-index:1}
+.inDeck.in{animation:cassIn .45s var(--ease)}
+.inDeck.out{animation:cassOut .35s var(--smooth) forwards}
+.inDeck .cLbl{height:30px;padding:0 9px}
+.inDeck .cLbl b{font-size:21px}
+.inDeck .cWin{height:56px;margin:8px 22px 0}
+.reel{position:absolute;top:50%;width:52px;height:52px;margin-top:-26px}
+.reel.l{left:9%}.reel.r{right:9%}
 .reel svg{width:100%;height:100%;overflow:visible}
-.pack{fill:#2b1d16;stroke:rgba(0,0,0,.5);stroke-width:1;transition:r .6s var(--ease)}
-.tapeLine{position:absolute;left:24%;right:24%;bottom:7px;height:3px;background:#2b1d16;border-radius:2px}
-.cassFoot{position:relative;height:30px;margin:8px auto 0;width:62%;border:var(--bw) solid var(--ink);border-bottom:none;
-  border-radius:8px 8px 0 0;background:rgba(2,10,26,.28);clip-path:polygon(0 100%,8% 0,92% 0,100% 100%);
-  border-left-color:transparent;border-right-color:transparent;
-  background-image:linear-gradient(var(--ink),var(--ink));background-size:100% var(--bw);background-repeat:no-repeat}
-.cassFoot i{position:absolute;top:10px;width:10px;height:10px;border-radius:50%;background:var(--ink)}
-.cassFoot i:first-child{left:24%}.cassFoot i:last-child{right:24%}
+.pack{fill:#3a2618;stroke:rgba(0,0,0,.5);stroke-width:1;transition:r .6s var(--ease)}
+.tapeLine{position:absolute;left:26%;right:26%;bottom:5px;height:2.5px;background:#3a2618;border-radius:2px}
 
-/* måttlinjen: vågformen */
-.dimLine{position:relative;margin:18px 2px 0;padding:0 10px}
-.screen:has(#scrMain[hidden]) ~ .dimLine{display:none}
-.dimLine::before,.dimLine::after{content:"";position:absolute;top:0;width:1.5px;height:40px;background:var(--line)}
-.dimLine::before{left:0}.dimLine::after{right:0}
-.wave{position:relative;height:40px;cursor:pointer;touch-action:none}
-.wave canvas{display:block;width:100%;height:40px}
-.loopReg{position:absolute;top:0;bottom:0;background:rgba(255,210,63,.16);border-left:2px solid var(--sig);border-right:2px solid var(--sig);pointer-events:none}
-.times{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:6px;font-size:11px;font-weight:600;color:var(--mid);font-variant-numeric:tabular-nums}
-.meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center}
-.meta span{padding:2px 7px;border:1.5px solid var(--line2);border-radius:4px;color:var(--txt);font-weight:600;font-size:10.5px}
-.meta .busy{border-color:var(--sig);color:var(--sig);animation:pulse 1.2s infinite}
+/* tejpremsan: var i låten du är */
+.tapeStrip{margin-top:8px;border-radius:7px;padding:3px 4px;background:#0b0908;box-shadow:inset 0 1px 6px rgba(0,0,0,.9),0 1px 0 rgba(255,255,255,.7)}
+.wave{position:relative;height:30px;cursor:pointer;touch-action:none}
+.wave canvas{display:block;width:100%;height:30px}
+.loopReg{position:absolute;top:0;bottom:0;background:rgba(255,180,58,.16);border-left:2px solid var(--vfd);border-right:2px solid var(--vfd);pointer-events:none}
 
-/* ── tangenterna ── */
-.transport{display:flex;align-items:stretch;justify-content:center;gap:0;margin:20px auto 0;width:max-content;
-  border:var(--bw) solid var(--ink);border-radius:10px;box-shadow:var(--hard);overflow:hidden;background:var(--ink)}
-.hw{border:2px solid var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;
-  background:var(--paper);color:var(--ink);font-weight:800;box-shadow:3px 3px 0 var(--ink);
-  transition:transform .08s var(--smooth),box-shadow .08s var(--smooth),opacity .2s}
-.hw:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+/* pianotangenterna */
+.transport{display:grid;grid-template-columns:1fr 1fr 1fr 1.35fr 1fr 1fr;margin-top:10px;padding:0 0 6px;border-radius:9px;
+  background:linear-gradient(180deg,#2a2725,#141210);box-shadow:inset 0 2px 4px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.7);overflow:hidden}
+.tb{position:relative;height:52px;border:none;border-right:1px solid #3d3a37;border-radius:0 0 6px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  color:#1d1b19;font-size:17px;font-weight:800;line-height:1;background:linear-gradient(180deg,#f6f5f2 0%,#dedcd6 70%,#c4c1ba 100%);
+  box-shadow:0 5px 0 #77736d,0 6px 3px rgba(0,0,0,.45);transform:translateY(0);transition:transform .07s,box-shadow .07s}
+.tb:last-child{border-right:none}
+.tb small{font-size:8.5px;font-weight:700;color:#5c5650}
+.tb svg.ic{width:18px;height:18px}
+.tb:active,.tb.down{transform:translateY(4px);box-shadow:0 1px 0 #77736d,0 2px 2px rgba(0,0,0,.4)}
+.tb:disabled{color:#9c968d;cursor:default}
+.tb:disabled:active{transform:none;box-shadow:0 5px 0 #77736d,0 6px 3px rgba(0,0,0,.45)}
+.tb.play{font-size:20px;background:linear-gradient(180deg,#ffe0a0 0%,#ffbf4d 70%,#e59a22 100%);box-shadow:0 5px 0 #8a5a14,0 6px 3px rgba(0,0,0,.45)}
+.tb.play:active,body.playing .transport .tb.play{transform:translateY(4px);box-shadow:0 1px 0 #8a5a14,0 2px 2px rgba(0,0,0,.4)}
+.tb.ej{color:#3d3833}
+
+/* vred + lägesomkopplare */
+.ctlRow{display:grid;grid-template-columns:78px 1fr 78px;gap:8px;align-items:center;margin-top:10px}
+.kBox{display:flex;flex-direction:column;align-items:center;gap:4px}
+.kStep,.kSub{display:none!important}
+.knob{position:relative;width:50px;height:50px;cursor:ns-resize;touch-action:none}
+.knob .trk,.knob .ring{position:absolute;inset:-5px;border-radius:50%;
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2.5px))}
+.knob .trk{background:conic-gradient(from 225deg,rgba(0,0,0,.25) 0 270deg,transparent 270deg)}
+.knob .ring{background:conic-gradient(from 225deg,transparent 0 var(--a0,0deg),#e08a12 var(--a0,0deg) var(--a1,0deg),transparent var(--a1,0deg))}
+.knob .cap{position:absolute;inset:2px;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,#d9dad9 0 55%,transparent 56%),repeating-conic-gradient(#b9bbbc 0 6deg,#8e9194 6deg 12deg);
+  box-shadow:0 3px 5px rgba(0,0,0,.45),inset 0 1px 1px rgba(255,255,255,.8);border:1px solid #6d7073}
+.knob .cap::before{content:"";position:absolute;left:50%;top:5px;width:3px;height:12px;margin-left:-1.5px;border-radius:2px;background:#1c1a18}
+.knob.drag .cap{filter:brightness(1.06)}
+.kTxt{display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.kLbl{font-size:10px;font-weight:700;color:#4a4540}
+.kVal{font-size:13px;font-weight:800;color:#1c1a18;font-variant-numeric:tabular-nums}
+.modeWrap{min-width:0}
+.modes{position:relative;display:grid;grid-template-columns:repeat(3,1fr);padding:3px;border-radius:9px;background:#1b1816;
+  box-shadow:inset 0 2px 5px rgba(0,0,0,.85),0 1px 0 rgba(255,255,255,.7);transition:opacity .3s}
+.modes.off{opacity:.55}
+.modeInd{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/3);border-radius:6px;opacity:0;pointer-events:none;
+  background:linear-gradient(180deg,#f6f5f2,#c9c6c0);box-shadow:0 2px 0 #66625c,inset 0 1px 0 #fff;transition:transform .32s var(--spring),opacity .3s}
+.modes button{position:relative;z-index:1;border:none;background:none;cursor:pointer;padding:7px 1px;text-align:center;color:#d6c8b4}
+.modes button b{display:block;font-size:12px;font-weight:800}
+.modes button small{display:block;font-size:9px;color:#8d806e;margin-top:1px}
+.modes button.on{color:#1c1a18}
+.modes button.on small{color:#5c5650}
+.modeLbl{text-align:center;font-size:10px;color:#4a4540;margin-top:3px;min-height:0}
+.modeLbl:empty{display:none}
+
+/* funktionsknappar längst ner på bandspelaren */
+.dock{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+.dock button{position:relative;height:42px;border-radius:8px;border:1px solid #0a0908;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  color:#ece2d2;background:linear-gradient(180deg,#3a3633,#24211f);box-shadow:0 2px 0 #0d0c0b,inset 0 1px 0 rgba(255,255,255,.12);transition:transform .07s,box-shadow .07s}
+.dock button:active{transform:translateY(2px);box-shadow:0 0 0 #0d0c0b}
+.dock .di{width:17px;height:17px}
+.dock .dl{font-size:9.5px;font-weight:600}
+.dock .dot{position:absolute;top:4px;right:6px;width:7px;height:7px;border-radius:50%;background:var(--vfd);box-shadow:0 0 6px var(--vfd)}
+.dock .dot.red{background:var(--rec);box-shadow:0 0 6px var(--rec);animation:pulse 1s infinite}
+
+/* jobbkortet ligger i luckan */
+.door .prog{position:absolute;left:8px;right:8px;bottom:8px;z-index:4;padding:8px 10px;border-radius:8px;background:rgba(12,10,9,.9);border:1px solid rgba(255,180,58,.3)}
+.prog .pT{display:flex;justify-content:space-between;font-size:11.5px;color:var(--vfd);margin-bottom:6px;font-weight:600}
+.prog .pT b{font-variant-numeric:tabular-nums}
+.prog .pB{height:6px;border-radius:3px;background:#2a221a;overflow:hidden}
+.prog .pB i{display:block;height:100%;width:0%;transition:width .35s var(--ease);background:repeating-linear-gradient(-45deg,var(--vfd) 0 7px,var(--sig2) 7px 14px);animation:stripes .9s linear infinite}
+.aiRow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.aiRow small{font-size:10.5px;color:rgba(255,190,90,.65);line-height:1.35}
+.aiRow .sb{flex:0 0 auto;padding:5px 10px;font-size:11px}
+
+/* ── kassetthyllan ── */
+.shelf{flex:none;position:relative;border-radius:12px;padding:9px 0 6px;
+  background:repeating-linear-gradient(178deg,rgba(255,255,255,.035) 0 2px,transparent 2px 7px),repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 40px,transparent 40px 97px),linear-gradient(180deg,#7a4e2f,#5a3820 60%,#45291a);
+  box-shadow:inset 0 1px 0 rgba(255,220,180,.35),inset 0 -3px 0 rgba(0,0,0,.35),0 8px 20px rgba(0,0,0,.55)}
+.shelfRow{display:flex;gap:10px;overflow-x:auto;padding:2px 12px 4px;scroll-snap-type:x proximity;touch-action:pan-x;scrollbar-width:none}
+.shelfRow::-webkit-scrollbar{display:none}
+.shelfHint{text-align:center;font-size:10.5px;color:#e4c9a8;opacity:.75;margin-top:2px}
+.cass.mini{flex:none;width:112px;height:72px;padding:6px 7px;scroll-snap-align:start;cursor:grab;touch-action:pan-x;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 4px 8px rgba(0,0,0,.5);transition:transform .15s var(--ease),opacity .2s}
+.cass.mini:active{transform:translateY(-2px)}
+.cass.mini .cLbl{height:30px;padding:0 6px 4px;flex-wrap:wrap;align-content:center;gap:0 5px}
+.cass.mini .cSide{width:14px;height:14px;font-size:9px}
+.cass.mini .cLbl b{font-size:16px;flex:1}
+.cass.mini .st2{width:100%;font-size:8.5px;font-weight:600;color:#6b6155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:19px;margin-top:-1px}
+.cass.mini .st2.ok{color:#2f6b3a}.cass.mini .st2.run{color:#9a5c00}.cass.mini .st2.err{color:#b4321e}
+.cass.mini .cWin{height:20px;margin:6px 14px 0}
+.cass.mini .cWin i{position:absolute;top:50%;width:15px;height:15px;margin-top:-7.5px;border-radius:50%;background:radial-gradient(circle,#efe7d6 0 35%,#3a2618 37% 100%)}
+.cass.mini .cWin i:first-child{left:12%}.cass.mini .cWin i:last-child{right:12%}
+.cass.mini.inPlayer{opacity:.28;cursor:default}
+.cass.mini.inPlayer::after{content:"i spelaren";position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff}
+.cass.blank{flex:none;width:86px;height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;
+  --shell:rgba(255,240,220,.06);border:1.5px dashed rgba(255,225,190,.5);box-shadow:none;color:#f1dcc0}
+.cass.blank .plus{font-size:22px;line-height:1}
+.cass.blank .bl{font-size:10.5px;font-weight:700}
+.cass.blank input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.cass.ghost{position:fixed;z-index:300;pointer-events:none;margin:0;transform:rotate(-4deg) scale(1.12);box-shadow:0 18px 36px rgba(0,0,0,.6);transition:none}
+.cass.ghost.back{transition:left .25s var(--ease),top .25s var(--ease),transform .25s,opacity .25s}
+
+/* ── stor text (scenläge) ── */
+.stageBar,.stageText{display:none}
+body.stage .screen{position:fixed;inset:0;z-index:90;border-radius:0;justify-content:center;box-shadow:none;
+  padding:calc(env(safe-area-inset-top,0px) + 20px) 20px calc(env(safe-area-inset-bottom,0px) + 180px)}
+body.stage .lyr{gap:20px}
+body.stage .lCur{font-size:clamp(30px,7.5vw,68px)}
+body.stage .lCur.long{font-size:clamp(26px,6.4vw,58px)}
+body.stage .lPrev,body.stage .lNext{font-size:clamp(16px,3.4vw,30px)}
+body.stage .lyr:has(.lCur.long) .lPrev{display:block}
+body.stage #bStage{display:none}
+body.stage .stageBar{display:flex;position:fixed;z-index:91;left:0;right:0;justify-content:center;gap:10px;bottom:calc(env(safe-area-inset-bottom,0px) + 22px)}
+body.stage .stageBar .tb{width:58px;height:54px;border-radius:9px}
+body.stage .stageBar .tb.play{width:74px}
+body.stage .stageText{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:8px;position:fixed;z-index:91;left:16px;right:16px;max-width:520px;margin:0 auto;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 104px)}
+body.stage .stageText .hw{height:44px;border-radius:9px;font-size:12.5px}
+body.stage .stageText .now{background:linear-gradient(180deg,#ffe0a0,#f0a530)}
+body.stage .stageText .sOff{grid-column:1/-1;text-align:center;font-size:12px;color:rgba(255,190,90,.65);min-height:15px}
+body.stage #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 190px)}
+
+/* ── allmänna knappar (ark m.m.) ── */
+.hw{border:1px solid #4b4844;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;border-radius:8px;
+  background:linear-gradient(180deg,#f3f2ee,#cbc9c3);color:#1d1b19;font-weight:800;box-shadow:0 2px 0 #34312d;transition:transform .08s,box-shadow .08s,opacity .2s}
+.hw:active{transform:translateY(2px);box-shadow:0 0 0 #34312d}
 .hw:disabled{opacity:.5;cursor:not-allowed}
-.transport .tb{width:62px;height:62px;border:none;border-radius:0;box-shadow:inset 0 -6px 0 var(--paper2);font-size:18px;line-height:1;margin-right:var(--bw)}
-.transport .tb:last-child{margin-right:0}
-.transport .tb:active,.transport .tb.play.on{transform:none;box-shadow:inset 0 3px 0 rgba(0,0,0,.25);background:var(--paper2)}
-.transport .tb:disabled{opacity:1;color:#8796b0}
-.transport .tb.play{width:78px;background:var(--sig);box-shadow:inset 0 -6px 0 var(--sig2);font-size:22px}
-body.playing .transport .tb.play{box-shadow:inset 0 4px 0 rgba(0,0,0,.22);background:#f7c62a}
-.tb small{font-size:9px;font-weight:700;color:#3a4d73}
-.tb svg.ic{width:21px;height:21px}
 
-/* jobbkort */
-.prog{margin-top:18px;padding:12px 14px;border-radius:10px;background:var(--glass2);border:var(--bw) solid var(--ink);box-shadow:var(--hard);
-  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-.prog .pT{display:flex;justify-content:space-between;font-size:12px;color:var(--txt);margin-bottom:9px;font-weight:600}
-.prog .pT b{color:var(--sig);font-variant-numeric:tabular-nums}
-.prog .pB{height:12px;border-radius:3px;background:rgba(0,0,0,.35);border:2px solid var(--ink);overflow:hidden}
-.prog .pB i{display:block;height:100%;width:0%;transition:width .35s var(--ease);
-  background:repeating-linear-gradient(-45deg,var(--sig) 0 7px,var(--sig2) 7px 14px);animation:stripes .9s linear infinite}
-.aiRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
-.aiRow small{font-size:11.5px;color:var(--mid);line-height:1.4}
-.aiRow .sb{flex:0 0 auto;padding:8px 14px}
+/* toast */
+#toast{position:fixed;z-index:9999;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 150px);display:none;pointer-events:none;
+  max-width:90vw;width:max-content;padding:10px 15px;border-radius:9px;font-size:13px;font-weight:700;text-align:center;
+  background:#0d0b09;color:var(--vfd);border:1px solid rgba(255,180,58,.45);box-shadow:0 10px 26px rgba(0,0,0,.6);text-shadow:0 0 6px rgba(255,170,40,.4)}
+#toast.on{display:block;animation:toastIn .3s var(--ease)}
+#toast.e{color:#ff8f75;border-color:rgba(255,120,90,.5)}
 
-/* lägen */
-.modes{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:20px;padding:4px;border-radius:10px;
-  background:var(--glass);border:var(--bw) solid var(--ink);box-shadow:var(--hard);
-  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:opacity .3s}
-.modes.off{opacity:.5}
-.modeInd{position:absolute;top:4px;bottom:4px;left:4px;width:calc((100% - 16px)/3);border-radius:6px;opacity:0;
-  background:var(--sig);border:2px solid var(--ink);transition:transform .35s var(--spring),opacity .3s;pointer-events:none}
-.modes button{position:relative;z-index:1;border:none;background:none;cursor:pointer;padding:9px 4px;border-radius:6px;text-align:center}
-.modes button b{display:block;font-size:13.5px;font-weight:800}
-.modes button small{display:block;font-size:10px;color:var(--mid);margin-top:2px}
-.modes button.on{color:var(--ink)}
-.modes button.on small{color:#3a3000}
-.modeLbl{text-align:center;font-size:11px;color:var(--mid);margin-top:8px;min-height:14px}
-
-/* vred, ritade som en ritning */
-.knobs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
-.kBox{position:relative;padding:12px 6px 12px;border:1.5px dashed var(--line2);border-radius:10px;text-align:center}
-.kLbl{font-size:12px;font-weight:700;font-stretch:115%;color:var(--txt);margin-bottom:8px}
-.kRow{display:flex;align-items:center;justify-content:center;gap:8px}
-.kStep{width:32px;height:32px;border-radius:7px;font-size:17px;flex-shrink:0;box-shadow:2px 2px 0 var(--ink)}
-.kStep:active{transform:translate(2px,2px)}
-.knob{position:relative;width:74px;height:74px;cursor:ns-resize;touch-action:none;flex-shrink:0}
-.knob .trk,.knob .ring{position:absolute;inset:0;border-radius:50%;
-  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px));
-          mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px))}
-.knob .trk{background:repeating-conic-gradient(from 225deg,var(--line2) 0 2deg,transparent 2deg 13.5deg);
-  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 6px),#000 calc(100% - 5px)),conic-gradient(from 225deg,#000 0 270deg,transparent 270deg);
-  -webkit-mask-composite:source-in;mask-composite:intersect}
-.knob .ring{background:conic-gradient(from 225deg,transparent 0 var(--a0,0deg),var(--sig) var(--a0,0deg) var(--a1,0deg),transparent var(--a1,0deg))}
-.knob .cap{position:absolute;inset:11px;border-radius:50%;background:var(--paper);border:var(--bw) solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
-.knob .cap::before{content:"";position:absolute;left:50%;top:4px;width:4px;height:15px;margin-left:-2px;border-radius:2px;background:var(--ink)}
-.knob.drag .cap{background:#fff3c4}
-.kVal{font-size:17px;font-weight:800;font-stretch:112%;color:var(--sig);margin-top:8px;font-variant-numeric:tabular-nums}
-.kSub{font-size:11px;color:var(--mid);margin-top:2px;min-height:14px}
-.grille{display:none}
-
-/* ── dockan ── */
-.dock{position:fixed;z-index:50;left:0;right:0;margin:0 auto;width:max-content;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
-  display:flex;gap:2px;padding:5px;border-radius:12px;background:var(--glass2);
-  -webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%);
-  border:var(--bw) solid var(--ink);box-shadow:var(--hard),inset 0 0 0 1px rgba(255,255,255,.12)}
-.dock button{position:relative;border:2px solid transparent;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;
-  padding:7px 11px;border-radius:8px;color:var(--txt);transition:background .15s,transform .1s}
-.dock button:active{background:var(--sig);color:var(--ink);border-color:var(--ink);transform:translateY(1px)}
-.dock .di{width:21px;height:21px}
-.dock .dl{font-size:10.5px;font-weight:600}
-.dock .dot{position:absolute;top:4px;right:8px;width:9px;height:9px;border-radius:50%;background:var(--sig);border:1.5px solid var(--ink)}
-.dock .dot.red{background:var(--rec);animation:pulse 1s infinite}
+@media (max-height:760px){
+  .vu{height:36px}.counter{padding:3px 8px}
+  .door{height:98px}.inDeck{top:5px}
+  .transport .tb{height:46px}
+  .shelfHint{display:none}
+}
+@media (max-height:690px){
+  .deckTop{display:none}
+  .steps{display:none}
+  .modes button small{display:none}
+}
+/* finputs */
+.door .prog{left:6px;right:6px;bottom:6px;padding:6px 8px 7px;background:rgba(10,8,7,.86)}
+.door .prog .pT{margin-bottom:4px;font-size:11px}
+.door .aiRow{margin-top:4px}
+.door .aiRow small{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.door .aiRow .sb{padding:3px 9px;font-size:10.5px;border-radius:6px}
+.ctlRow{grid-template-columns:68px 1fr 68px;gap:6px}
+.modes button b{font-size:11.5px;letter-spacing:-.1px}
+.cass.mini.inPlayer>*{visibility:hidden}
+.doorEmpty{margin:8px;border:1.5px dashed rgba(255,225,190,.18);border-radius:9px}
 
 /* ── ark ── */
 .sheetWrap{position:fixed;inset:0;z-index:80;pointer-events:none}
@@ -283,7 +366,7 @@ body.playing .transport .tb.play{box-shadow:inset 0 4px 0 rgba(0,0,0,.22);backgr
 .note b{color:var(--txt)}
 .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
 .chip{padding:8px 13px;border-radius:7px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);
-  font-size:12.5px;font-weight:700;cursor:pointer;box-shadow:2px 2px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+  font-size:12.5px;font-weight:700;cursor:pointer;box-shadow:0 1px 0 rgba(0,0,0,.55);transition:transform .08s,box-shadow .08s}
 .chip:active{transform:translate(2px,2px);box-shadow:none}
 .chip.on{background:var(--sig)}
 .offRow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
@@ -309,11 +392,11 @@ body.playing .transport .tb.play{box-shadow:inset 0 4px 0 rgba(0,0,0,.22);backgr
   background:repeating-linear-gradient(var(--line2) 0 1.5px,transparent 1.5px 13.8px);-webkit-mask:linear-gradient(90deg,#000 0 9px,transparent 9px calc(100% - 9px),#000 calc(100% - 9px));mask:linear-gradient(90deg,#000 0 9px,transparent 9px calc(100% - 9px),#000 calc(100% - 9px))}
 .fader .ff{position:absolute;left:50%;bottom:6px;width:6px;margin-left:-3px;border-radius:3px;background:var(--sig)}
 .fader .fc{position:absolute;left:50%;width:40px;height:22px;margin-left:-20px;margin-top:-11px;border-radius:5px;
-  background:var(--paper);border:var(--bw) solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
+  background:var(--paper);border:var(--bw) solid var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.55)}
 .fader .fc::after{content:"";position:absolute;left:5px;right:5px;top:7.5px;height:2.5px;background:var(--ink)}
 .fVal{font-size:12px;font-weight:700;color:var(--sig);font-variant-numeric:tabular-nums}
 .ms{display:flex;gap:6px}
-.ms .hw{width:32px;height:28px;border-radius:6px;font-size:11px;box-shadow:2px 2px 0 var(--ink)}
+.ms .hw{width:32px;height:28px;border-radius:6px;font-size:11px;box-shadow:0 1px 0 rgba(0,0,0,.55)}
 .ms .hw:active{transform:translate(2px,2px)}
 .ms .hw.mOn{background:var(--rec);color:#fff}
 .ms .hw.sOn{background:var(--sig)}
@@ -329,7 +412,7 @@ body.playing .transport .tb.play{box-shadow:inset 0 4px 0 rgba(0,0,0,.22);backgr
 .sw.on{background:var(--sig)}
 .sw.on::after{transform:translateX(22px)}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:3px;background:var(--ink);outline:none;border:1px solid var(--line3)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:5px;background:var(--sig);border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:5px;background:var(--sig);border:2px solid var(--ink);box-shadow:0 1px 0 rgba(0,0,0,.55)}
 input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:5px;background:var(--sig);border:2px solid var(--ink)}
 .sl{padding:9px 0}
 .sl .slT{display:flex;justify-content:space-between;font-size:12.5px;color:var(--mid);margin-bottom:9px}
@@ -350,26 +433,6 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:5px;bac
   background:var(--sig);box-shadow:var(--hard)}
 .tapBig:active{transform:translate(4px,4px);box-shadow:none}
 
-/* scenläge */
-.stageBar{display:none}
-body.stage{overflow:hidden}
-body.stage .screen{position:fixed;inset:0;z-index:90;border-radius:0;display:flex;flex-direction:column;justify-content:center;border:none;box-shadow:none;
-  -webkit-backdrop-filter:none;backdrop-filter:none;
-  background:
-    linear-gradient(var(--grid) 1px,transparent 1px) 0 0/24px 24px,
-    linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/24px 24px,
-    radial-gradient(ellipse at 50% 35%,#103a7a,#071c40 75%);
-  padding:calc(env(safe-area-inset-top,0px) + 20px) 20px calc(env(safe-area-inset-bottom,0px) + 110px)}
-body.stage .screw,body.stage .reelWin,body.stage .cassFoot{display:none}
-body.stage .lyr{min-height:50vh;gap:20px}
-body.stage .lCur{font-size:clamp(30px,7.5vw,68px)}
-body.stage .lPrev,body.stage .lNext{font-size:clamp(16px,3.4vw,30px)}
-body.stage .stageBar{display:flex;position:fixed;z-index:91;left:0;right:0;justify-content:center;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);gap:12px;align-items:center}
-body.stage .stageBar .tb{width:56px;height:56px;border-radius:10px;border:var(--bw) solid var(--ink);box-shadow:var(--hard);font-size:18px}
-body.stage .stageBar .tb.play{width:72px;height:72px;background:var(--sig)}
-body.stage .dock,body.stage #bStage{display:none}
-
-#toast{position:fixed;z-index:9999;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 96px);display:none;pointer-events:none;
   max-width:90vw;width:max-content;padding:11px 16px;border-radius:9px;font-size:13.5px;font-weight:700;text-align:center;
   background:var(--paper);color:var(--ink);border:var(--bw) solid var(--ink);box-shadow:var(--hard)}
 #toast.on{display:block;animation:toastIn .3s var(--ease)}
@@ -379,7 +442,7 @@ body.stage .dock,body.stage #bStage{display:none}
 /* låtlista */
 .libList{display:flex;flex-direction:column;gap:8px;margin-top:14px;max-height:46vh;overflow-y:auto;padding:0 4px 4px 0}
 .libRow{display:flex;align-items:center;gap:10px;padding:9px 9px 9px 10px;border-radius:9px;background:var(--paper);color:var(--ink);
-  border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer;transition:transform .08s,box-shadow .08s}
+  border:2px solid var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.55);cursor:pointer;transition:transform .08s,box-shadow .08s}
 .libRow:active{transform:translate(3px,3px);box-shadow:none}
 .libRow.cur{background:var(--sig)}
 .libRow .lNo{width:24px;height:24px;display:grid;place-items:center;font-size:12px;font-weight:800;border-radius:4px;background:var(--ink);color:var(--paper);flex-shrink:0}
@@ -397,76 +460,6 @@ textarea.inp{display:block;font-size:14.5px}
   .transport .tb{width:54px;height:56px}.transport .tb.play{width:68px}
   .dock button{padding:7px 8px}
 }
-
-/* ═════ App-läge: allt får plats på en skärm, ingen sidscroll ═════ */
-html,body{height:100%;overflow:hidden;overscroll-behavior:none}
-body{position:fixed;inset:0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-input,textarea,.lrow input{-webkit-user-select:text;user-select:text}
-.app{height:100%;display:flex;flex-direction:column;
-  padding:calc(env(safe-area-inset-top,0px) + 10px) 14px calc(env(safe-area-inset-bottom,0px) + 86px)}
-.top{flex:none;padding:0 2px 10px}
-.device{flex:1;min-height:0;display:flex;flex-direction:column}
-.screen{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px 12px 0}
-.scrEmpty,.scrMain{flex:1;min-height:0;display:flex;flex-direction:column}
-.scrEmpty{padding:2px 2px 0}
-.scrMain .lyr{flex:1;min-height:0;overflow:hidden;padding:10px 4px 4px}
-.scope{flex:none;height:26px}
-.reelWin{flex:none;height:64px;margin:8px 18px 0;border-radius:32px}
-.reel{width:58px;height:58px;margin-top:-29px}
-.cassFoot{flex:none;height:22px;margin-top:6px}
-.cassFoot i{top:6px;width:8px;height:8px}
-.screen .prog{flex:none;margin:8px 0 0;box-shadow:3px 3px 0 var(--ink)}
-.screen:has(#jobCard:not([hidden])) .reelWin{display:none}
-.dimLine{flex:none;margin:12px 2px 0}
-.wave,.wave canvas{height:34px}
-.dimLine::before,.dimLine::after{height:34px}
-.times{margin-top:3px}
-.transport{flex:none;margin-top:12px}
-.transport .tb{height:54px;width:60px}
-.transport .tb.play{width:76px}
-.modes{flex:none;margin-top:12px}
-.modes button{padding:7px 4px}
-.modeLbl{flex:none;min-height:0;margin-top:4px}
-.modeLbl:empty{display:none}
-.knobs{flex:none;margin-top:10px;gap:10px}
-.kBox{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"lbl val" "row row";align-items:baseline;padding:8px 8px 9px;text-align:left}
-.kLbl{grid-area:lbl;margin:0}
-.kVal{grid-area:val;margin:0;text-align:right;font-size:15px}
-.kRow{grid-area:row;margin-top:6px;justify-content:space-between}
-.kSub{display:none}
-.knob{width:54px;height:54px}
-.knob .cap{inset:8px}
-.knob .cap::before{top:3px;height:11px;width:3.5px}
-.kStep{width:34px;height:34px}
-.dock{bottom:calc(env(safe-area-inset-bottom,0px) + 10px)}
-#toast{bottom:calc(env(safe-area-inset-bottom,0px) + 84px)}
-.tapbar{bottom:calc(env(safe-area-inset-bottom,0px) + 84px)}
-@media (max-height:760px){
-  .cassFoot{display:none}
-  .reelWin{height:52px}.reel{width:46px;height:46px;margin-top:-23px}
-  .label{padding-top:9px;padding-bottom:8px}
-  .songT{font-size:24px}
-  .lCur{font-size:21px}
-  .modes button small{display:none}
-}
-@media (max-height:680px){
-  .steps{display:none}
-  .reelWin{display:none}
-  .knobs{display:none}
-}
-body.stage .app{padding:0}
-
-/* scenläge: flytta texten */
-.stageText{display:none}
-body.stage .stageText{display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:8px;position:fixed;z-index:91;left:16px;right:16px;max-width:520px;margin:0 auto;
-  bottom:calc(env(safe-area-inset-bottom,0px) + 108px)}
-body.stage .stageText .hw{height:46px;border-radius:9px;font-size:13px;font-weight:800;box-shadow:3px 3px 0 var(--ink)}
-body.stage .stageText .hw:active{transform:translate(3px,3px);box-shadow:none}
-body.stage .stageText .now{background:var(--sig)}
-body.stage .stageText .sOff{grid-column:1/-1;text-align:center;font-size:12px;font-weight:600;color:var(--mid);min-height:15px}
-body.stage .screen{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 180px)}
-body.stage #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 186px)}
-
 /* mät hörlurarnas fördröjning */
 .calib{position:fixed;z-index:95;left:16px;right:16px;max-width:420px;margin:0 auto;top:50%;transform:translateY(-50%);
   display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 18px 18px;border-radius:14px;text-align:center;
@@ -477,14 +470,35 @@ body.stage #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 186px)}
 .calib .cD{font-size:20px;letter-spacing:.3em;color:var(--sig);min-height:26px}
 .calib .sb{flex:none;padding:10px 22px}
 
-/* ord för ord */
-.lCur.words>#lCurS{background:none}
-.lCur.words .w{display:inline-block}
-.lyr>div{flex-shrink:0}
-.lCur.long{font-size:20px}
-@media (max-height:860px){.lyr:has(.lCur.long) .lPrev{display:none}}
-body.stage .lCur.long{font-size:clamp(26px,6.4vw,58px)}
-body.stage .lyr:has(.lCur.long) .lPrev{display:block}
+/* ark och reglage i bandspelarens stil */
+.sheet{background:linear-gradient(180deg,#2c2621,#1a1613);border:1px solid #000;border-bottom:none;box-shadow:0 -8px 30px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,230,200,.12)}
+.shHead h3{color:#f3e6d2}
+.blk{background:rgba(0,0,0,.22);border:1px solid var(--line3)}
+.btn{background:linear-gradient(180deg,#ffd98f,#f2a634);border:1px solid #6b4610;color:#2a1a05;box-shadow:0 3px 0 #7a4f12,0 6px 12px rgba(0,0,0,.35)}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 #7a4f12}
+.btn.sec{background:linear-gradient(180deg,#f3f2ee,#cbc9c3);border-color:#4b4844;color:#1d1b19;box-shadow:0 3px 0 #34312d,0 6px 12px rgba(0,0,0,.35)}
+.btn.sec:active{box-shadow:0 0 0 #34312d}
+.btn.rec{background:linear-gradient(180deg,#ff7a63,#d8372a);border-color:#6d1a12;color:#fff;box-shadow:0 3px 0 #6d1a12}
+.chip{background:linear-gradient(180deg,#f3f2ee,#cbc9c3);border:1px solid #4b4844;color:#1d1b19;box-shadow:0 2px 0 #34312d}
+.chip.on{background:linear-gradient(180deg,#ffd98f,#f2a634);border-color:#6b4610}
+.inp{background:#f6f0e4;border:1px solid #4b4844;color:#1d1b19;box-shadow:inset 0 2px 3px rgba(0,0,0,.15)}
+.inp:focus{border-color:#e08a12;box-shadow:0 0 0 2px rgba(255,180,58,.6)}
+.tag{background:var(--vfd);border-color:#6b4610;color:#2a1a05}
+.sw{background:#141210;border:1px solid #000;box-shadow:inset 0 2px 4px rgba(0,0,0,.8)}
+.sw::after{background:linear-gradient(180deg,#f3f2ee,#bdbab3);border:1px solid #4b4844}
+.sw.on{background:#3a2a12;box-shadow:inset 0 2px 4px rgba(0,0,0,.8),0 0 8px rgba(255,170,40,.35)}
+.sw.on::after{background:linear-gradient(180deg,#ffd98f,#f2a634)}
+.lrow .ts{background:#f6f0e4;color:#1d1b19}
+.libRow{background:linear-gradient(180deg,#f3f2ee,#d8d5ce);border:1px solid #4b4844;box-shadow:0 2px 0 #34312d}
+.libRow.cur{background:linear-gradient(180deg,#ffe0a0,#f2b04a)}
+.fader .ft{background:#0b0a09}
+.fader .ff{background:var(--vfd);box-shadow:0 0 6px rgba(255,170,40,.5)}
+.fader .fc{background:linear-gradient(180deg,#f3f2ee,#bdbab3);border:1px solid #4b4844;box-shadow:0 3px 4px rgba(0,0,0,.5)}
+.tapbar,.calib{background:rgba(26,22,19,.97);border:1px solid rgba(255,180,58,.3);box-shadow:0 14px 34px rgba(0,0,0,.6)}
+.tapBig{background:linear-gradient(180deg,#ffd98f,#f2a634);border:1px solid #6b4610;color:#2a1a05;box-shadow:0 4px 0 #7a4f12}
+input[type=range]{background:#0b0a09}
+input[type=range]::-webkit-slider-thumb{background:linear-gradient(180deg,#f3f2ee,#bdbab3);border:1px solid #4b4844;box-shadow:0 2px 3px rgba(0,0,0,.5)}
+.status.ok{color:var(--vfd)}
 </style>
 </head>
 <body>
@@ -492,9 +506,9 @@ body.stage .lyr:has(.lCur.long) .lPrev{display:block}
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <symbol id="reelHub" viewBox="-50 -50 100 100">
-      <circle r="17" fill="#eef3fa" stroke="#071631" stroke-width="3"/>
-      <g fill="#071631"><rect x="-2.6" y="-11" width="5.2" height="6" rx="1"/><rect x="-2.6" y="-11" width="5.2" height="6" rx="1" transform="rotate(60)"/><rect x="-2.6" y="-11" width="5.2" height="6" rx="1" transform="rotate(120)"/><rect x="-2.6" y="-11" width="5.2" height="6" rx="1" transform="rotate(180)"/><rect x="-2.6" y="-11" width="5.2" height="6" rx="1" transform="rotate(240)"/><rect x="-2.6" y="-11" width="5.2" height="6" rx="1" transform="rotate(300)"/></g>
-      <circle r="5" fill="#071631"/>
+      <circle r="17" fill="#efe7d6" stroke="#1a1714" stroke-width="2.5"/>
+      <g fill="#1a1714"><rect x="-2.6" y="-11" width="5.2" height="6" rx="1"/><rect x="-2.6" y="-11" width="5.2" height="6" rx="1" transform="rotate(60)"/><rect x="-2.6" y="-11" width="5.2" height="6" rx="1" transform="rotate(120)"/><rect x="-2.6" y="-11" width="5.2" height="6" rx="1" transform="rotate(180)"/><rect x="-2.6" y="-11" width="5.2" height="6" rx="1" transform="rotate(240)"/><rect x="-2.6" y="-11" width="5.2" height="6" rx="1" transform="rotate(300)"/></g>
+      <circle r="5" fill="#1a1714"/>
     </symbol>
     <symbol id="icList" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12" /><circle cx="4" cy="6" r="1.2"/><circle cx="4" cy="12" r="1.2"/><circle cx="4" cy="18" r="1.2"/></symbol>
     <symbol id="icText" viewBox="0 0 24 24"><path d="M3 6h11M3 11h11M3 16h7"/><path d="M19 4v11.5"/><circle cx="16.8" cy="16.5" r="2.4"/><path d="M19 4l3 1.5"/></symbol>
@@ -504,16 +518,14 @@ body.stage .lyr:has(.lCur.long) .lPrev{display:block}
     <symbol id="icPrev" viewBox="0 0 24 24"><path d="M6 5v14"/><path d="M19 5.5v13L9 12z" class="fill"/></symbol>
     <symbol id="icNext" viewBox="0 0 24 24"><path d="M18 5v14"/><path d="M5 5.5v13L15 12z" class="fill"/></symbol>
     <symbol id="icFull" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></symbol>
+    <symbol id="icEject" viewBox="0 0 24 24"><path d="M12 5l7 8H5z" class="fill"/><path d="M5 18h14"/></symbol>
     <symbol id="icX" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   </defs>
 </svg>
 
 <div class="app">
   <header class="top">
-    <div class="logo">
-      <svg class="mk" viewBox="0 0 40 28" aria-hidden="true"><rect x="1.5" y="1.5" width="37" height="25" rx="4"/><rect x="7" y="7" width="26" height="9" rx="4.5" class="w"/><circle cx="12.5" cy="11.5" r="2.6"/><circle cx="27.5" cy="11.5" r="2.6"/><path d="M10 26.5l3-5h14l3 5"/></svg>
-      <span>KaraokeStudio</span>
-    </div>
+    <div class="logo"><span class="badge">KaraokeStudio</span><span class="model">KS-1</span></div>
     <div class="steps" aria-label="Förberedelse av låten">
       <span class="st" id="st1"><i></i>Låt</span>
       <span class="st" id="st2"><i></i>Sång bort</span>
@@ -521,120 +533,126 @@ body.stage .lyr:has(.lCur.long) .lPrev{display:block}
     </div>
   </header>
 
-  <section class="device">
-    <div class="screen" id="screen">
-      <i class="screw a"></i><i class="screw b"></i><i class="screw c"></i><i class="screw d"></i>
-
-      <div class="scrEmpty" id="scrEmpty">
-        <div class="label bigLoad" id="dropZone">
-          <input type="file" id="fiMain" multiple accept="audio/*,video/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.opus,.mp4,.mov,.webm,.mkv">
-          <span class="side">A</span>
-          <b>Lägg till låtar</b>
-          <small>Tryck här och välj en eller flera låtar.<br>MP3, M4A, WAV eller video. Allt stannar på telefonen.</small>
-        </div>
+  <!-- textfönstret: lysande display som i en 80-talsstereo -->
+  <section class="screen" id="screen">
+    <div class="scrEmpty" id="scrEmpty">
+      <div class="emptyMsg">
+        <b>Ingen kassett i</b>
+        <span>Dra en kassett från hyllan upp till bandspelaren.</span>
+        <label class="addFirst" id="dropZone">Lägg till låtar<input type="file" id="fiMain" multiple accept="audio/*,video/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.opus,.mp4,.mov,.webm,.mkv"></label>
       </div>
-
-      <div class="scrMain" id="scrMain" hidden>
-        <div class="label scrTop">
-          <span class="side">A</span>
-          <div class="ttl"><div class="songT" id="songT">—</div><div class="songA" id="songA"></div></div>
-          <div class="chordBox" id="chordBox" hidden><div class="cNow" id="cNow">—</div><div class="cNext" id="cNext"></div></div>
-          <button class="iconBtn loopBtn" id="bLoop" title="Loopa ett parti"><span id="loopLbl">A–B</span></button>
-          <button class="iconBtn" id="bStage" title="Scenläge"><svg class="ic"><use href="#icFull"/></svg></button>
-        </div>
-        <div class="lyr">
-          <div class="lPrev" id="lPrev"></div>
-          <div class="lCur" id="lCur"><span id="lCurS"></span></div>
-          <div class="lNext" id="lNext"></div>
-        </div>
-        <canvas class="scope" id="scope"></canvas>
-        <div class="coachRow" id="coachRow" hidden><span>Du sjunger: <span id="coachNote">—</span></span><span>Träff <b id="coachPct">–</b></span></div>
+    </div>
+    <div class="scrMain" id="scrMain" hidden>
+      <div class="scrTop">
+        <div class="ttl"><div class="songT" id="songT">—</div><div class="songA" id="songA"></div></div>
+        <div class="chordBox" id="chordBox" hidden><div class="cNow" id="cNow">—</div><div class="cNext" id="cNext"></div></div>
+        <button class="iconBtn loopBtn" id="bLoop" title="Loopa ett parti"><span id="loopLbl">A–B</span></button>
+        <button class="iconBtn" id="bStage" title="Stor text"><svg class="ic"><use href="#icFull"/></svg></button>
       </div>
+      <div class="lyr">
+        <div class="lPrev" id="lPrev"></div>
+        <div class="lCur" id="lCur"><span id="lCurS"></span></div>
+        <div class="lNext" id="lNext"></div>
+      </div>
+      <canvas class="scope" id="scope"></canvas>
+      <div class="coachRow" id="coachRow" hidden><span>Du sjunger: <span id="coachNote">—</span></span><span>Träff <b id="coachPct">–</b></span></div>
+    </div>
+    <div class="stageText" aria-label="Flytta texten">
+      <button class="hw" id="sTxtM" title="Visa texten tidigare">◀ Tidigare</button>
+      <button class="hw now" id="sNow" title="Tryck när raden börjar sjungas">Raden börjar nu</button>
+      <button class="hw" id="sTxtP" title="Visa texten senare">Senare ▶</button>
+      <span class="sOff" id="sOffV"></span>
+    </div>
+    <div class="stageBar">
+      <button class="hw tb" id="sPrev" title="Förra låten"><svg class="ic"><use href="#icPrev"/></svg></button>
+      <button class="hw tb play" id="sPlay">▶</button>
+      <button class="hw tb" id="sNext" title="Nästa låt"><svg class="ic"><use href="#icNext"/></svg></button>
+      <button class="hw tb" id="sExit" title="Stäng stor text"><svg class="ic"><use href="#icX"/></svg></button>
+    </div>
+  </section>
 
-      <div class="reelWin" aria-hidden="true">
-        <div class="tapeLine"></div>
-        <div class="reel l"><svg viewBox="-50 -50 100 100"><circle class="pack" id="packL" r="40"/><g id="hubL"><use href="#reelHub" x="-50" y="-50" width="100" height="100"/></g></svg></div>
-        <div class="reel r"><svg viewBox="-50 -50 100 100"><circle class="pack" id="packR" r="22"/><g id="hubR"><use href="#reelHub" x="-50" y="-50" width="100" height="100"/></g></svg></div>
+  <!-- själva bandspelaren -->
+  <section class="deck" id="deck">
+    <div class="deckTop">
+      <canvas class="vu" id="vu" aria-hidden="true"></canvas>
+      <div class="counter">
+        <span class="cTime"><span id="tCur">0:00</span><i>/</i><span id="tDur">0:00</span></span>
+        <span class="meta"><span id="busy" class="busy" hidden>Justerar…</span><span id="aiBadge" hidden>AI</span><span id="metaKey" hidden></span></span>
+      </div>
+    </div>
+
+    <div class="door" id="door">
+      <div class="doorGlass"></div>
+      <div class="doorEmpty" id="doorEmpty"><b>Dra hit en kassett</b><span>eller tryck på en i hyllan</span></div>
+      <div class="cass inDeck" id="deckCass" hidden>
+        <div class="cLbl"><span class="cSide">A</span><b id="deckTitle"></b><small id="deckArtist"></small></div>
+        <div class="cWin">
+          <div class="tapeLine"></div>
+          <div class="reel l"><svg viewBox="-50 -50 100 100"><circle class="pack" id="packL" r="40"/><g id="hubL"><use href="#reelHub" x="-50" y="-50" width="100" height="100"/></g></svg></div>
+          <div class="reel r"><svg viewBox="-50 -50 100 100"><circle class="pack" id="packR" r="22"/><g id="hubR"><use href="#reelHub" x="-50" y="-50" width="100" height="100"/></g></svg></div>
+        </div>
       </div>
       <div class="prog" id="jobCard" hidden>
         <div class="pT"><span id="jobL">Arbetar…</span><b id="jobP">0%</b></div>
         <div class="pB"><i id="jobF"></i></div>
         <div class="aiRow"><small id="jobSub"></small><button class="hw sb" id="jobX">Avbryt</button></div>
       </div>
-      <div class="cassFoot" aria-hidden="true"><i></i><i></i></div>
-
-      <div class="stageText" aria-label="Flytta texten">
-        <button class="hw" id="sTxtM" title="Visa texten tidigare">◀ Tidigare</button>
-        <button class="hw now" id="sNow" title="Tryck när raden börjar sjungas">Raden börjar nu</button>
-        <button class="hw" id="sTxtP" title="Visa texten senare">Senare ▶</button>
-        <span class="sOff" id="sOffV"></span>
-      </div>
-      <div class="stageBar">
-        <button class="hw tb" id="sPrev" title="Förra låten"><svg class="ic"><use href="#icPrev"/></svg></button>
-        <button class="hw tb play" id="sPlay">▶</button>
-        <button class="hw tb" id="sNext" title="Nästa låt"><svg class="ic"><use href="#icNext"/></svg></button>
-        <button class="hw tb" id="sExit" title="Stäng scenläge"><svg class="ic"><use href="#icX"/></svg></button>
-      </div>
     </div>
 
-    <div class="dimLine">
+    <div class="tapeStrip">
       <div class="wave" id="wave"><canvas id="waveC"></canvas><div class="loopReg" id="loopReg" hidden></div></div>
-      <div class="times">
-        <span id="tCur">0:00</span>
-        <span class="meta"><span id="busy" class="busy" hidden>Justerar…</span><span id="aiBadge" hidden>AI-separerad</span><span id="metaKey" hidden></span></span>
-        <span id="tDur">0:00</span>
-      </div>
     </div>
 
     <div class="transport">
-      <button class="hw tb" id="bPrev" disabled title="Förra låten"><svg class="ic"><use href="#icPrev"/></svg></button>
+      <button class="hw tb ej" id="bEject" title="Mata ut kassetten"><svg class="ic"><use href="#icEject"/></svg><small>Ut</small></button>
+      <button class="hw tb" id="bPrev" disabled title="Förra låten"><svg class="ic"><use href="#icPrev"/></svg><small>Förra</small></button>
       <button class="hw tb" id="bBack" disabled title="10 sekunder bakåt">↺<small>10 s</small></button>
       <button class="hw tb play" id="bPlay" disabled>▶</button>
       <button class="hw tb" id="bFwd" disabled title="10 sekunder framåt">↻<small>10 s</small></button>
-      <button class="hw tb" id="bNext" disabled title="Nästa låt"><svg class="ic"><use href="#icNext"/></svg></button>
+      <button class="hw tb" id="bNext" disabled title="Nästa låt"><svg class="ic"><use href="#icNext"/></svg><small>Nästa</small></button>
     </div>
 
-
-    <div class="modes off" id="modes">
-      <span class="modeInd" id="modeInd"></span>
-      <button data-m="orig"><b>Original</b><small>med sång</small></button>
-      <button data-m="kara"><b>Karaoke</b><small>utan sång</small></button>
-      <button data-m="prac"><b>Öva</b><small>svag sång + klick</small></button>
-    </div>
-    <div class="modeLbl" id="modeLbl"></div>
-
-    <div class="knobs">
+    <div class="ctlRow">
       <div class="kBox">
-        <div class="kLbl">Tonart</div>
-        <div class="kRow">
-          <button class="hw kStep" id="semiM" title="Sänk">−</button>
-          <div class="knob" id="kSemi"><div class="trk"></div><div class="ring"></div><div class="cap"></div></div>
-          <button class="hw kStep" id="semiP" title="Höj">+</button>
-        </div>
-        <div class="kVal" id="semiV">±0</div>
+        <div class="knob" id="kSemi"><div class="trk"></div><div class="ring"></div><div class="cap"></div></div>
+        <div class="kTxt"><span class="kLbl">Tonart</span><span class="kVal" id="semiV">±0</span></div>
+        <button class="hw kStep" id="semiM" title="Sänk">−</button><button class="hw kStep" id="semiP" title="Höj">+</button>
         <div class="kSub" id="semiSub">Originaltonart</div>
       </div>
-      <div class="kBox">
-        <div class="kLbl">Tempo</div>
-        <div class="kRow">
-          <button class="hw kStep" id="tempoM" title="Långsammare">−</button>
-          <div class="knob" id="kTempo"><div class="trk"></div><div class="ring"></div><div class="cap"></div></div>
-          <button class="hw kStep" id="tempoP" title="Snabbare">+</button>
+      <div class="modeWrap">
+        <div class="modes off" id="modes">
+          <span class="modeInd" id="modeInd"></span>
+          <button data-m="orig"><b>Original</b><small>med sång</small></button>
+          <button data-m="kara"><b>Karaoke</b><small>utan sång</small></button>
+          <button data-m="prac"><b>Öva</b><small>svag sång</small></button>
         </div>
-        <div class="kVal" id="tempoV">100%</div>
+        <div class="modeLbl" id="modeLbl"></div>
+      </div>
+      <div class="kBox">
+        <div class="knob" id="kTempo"><div class="trk"></div><div class="ring"></div><div class="cap"></div></div>
+        <div class="kTxt"><span class="kLbl">Tempo</span><span class="kVal" id="tempoV">100%</span></div>
+        <button class="hw kStep" id="tempoM" title="Långsammare">−</button><button class="hw kStep" id="tempoP" title="Snabbare">+</button>
         <div class="kSub" id="tempoSub">Originaltempo</div>
       </div>
     </div>
+
+    <nav class="dock">
+      <button data-sh="sh-lib"><svg class="di"><use href="#icList"/></svg><span class="dl">Låtar</span><span class="dot" id="dotLib" hidden></span></button>
+      <button data-sh="sh-text"><svg class="di"><use href="#icText"/></svg><span class="dl">Text</span><span class="dot" id="dotText" hidden></span></button>
+      <button data-sh="sh-mix"><svg class="di"><use href="#icMix"/></svg><span class="dl">Mixer</span></button>
+      <button data-sh="sh-sing"><svg class="di"><use href="#icMic"/></svg><span class="dl">Sjung</span><span class="dot red" id="dotRec" hidden></span></button>
+      <button data-sh="sh-more"><svg class="di"><use href="#icMore"/></svg><span class="dl">Mer</span></button>
+    </nav>
+  </section>
+
+  <!-- kassetthyllan -->
+  <section class="shelf" aria-label="Dina kassetter">
+    <div class="shelfRow" id="shelf">
+      <label class="cass blank" title="Lägg till låtar"><span class="plus">＋</span><span class="bl">Ny kassett</span><input type="file" id="fiShelf" multiple accept="audio/*,video/*,.mp3,.wav,.m4a,.aac,.flac,.ogg,.opus,.mp4,.mov,.webm,.mkv"></label>
+    </div>
+    <div class="shelfHint" id="shelfHint">Dra en kassett upp till bandspelaren</div>
   </section>
 </div>
-
-<nav class="dock">
-  <button data-sh="sh-lib"><svg class="di"><use href="#icList"/></svg><span class="dl">Låtar</span><span class="dot" id="dotLib" hidden></span></button>
-  <button data-sh="sh-text"><svg class="di"><use href="#icText"/></svg><span class="dl">Text</span><span class="dot" id="dotText" hidden></span></button>
-  <button data-sh="sh-mix"><svg class="di"><use href="#icMix"/></svg><span class="dl">Mixer</span></button>
-  <button data-sh="sh-sing"><svg class="di"><use href="#icMic"/></svg><span class="dl">Sjung</span><span class="dot red" id="dotRec" hidden></span></button>
-  <button data-sh="sh-more"><svg class="di"><use href="#icMore"/></svg><span class="dl">Mer</span></button>
-</nav>
 
 <div class="sheetWrap" id="sheetWrap">
   <div class="sheetBg" id="sheetBg"></div>
@@ -3293,73 +3311,176 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* ═════════ Kassettspolar + dammpartiklar ═════════
-   Spolarna snurrar med låtens tempo; bandet flyttas från vänster till höger spole i takt med låten.
-   Dammet svävar i bakgrunden och lyfter på basslagen. */
+/* ═════════ Bandspelaren: kassetthylla, dra-och-släpp, utmatning, VU-mätare, spolar, damm ═════════ */
 (function(){
   const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const HUB=17,MAX=44,TAPE=MAX*MAX-HUB*HUB,V=42;     /* bandhastighet i spol-enheter per sekund */
+  const SHELLS=[["#2a2725","#e5432d"],["#e9e4d8","#2f6fb0"],["#c63b2b","#f2b705"],["#efb02a","#1f1c19"],["#2f5f86","#f2b705"],["#4f6b3a","#e5432d"],["rgba(78,66,56,.92)","#ff8a3d"],["#7a2e5a","#f2b705"]];
+  const shellOf=id=>{let h=0;for(const c of String(id))h=(h*31+c.charCodeAt(0))>>>0;return SHELLS[h%SHELLS.length];};
+
+  /* ── spolarna i luckan ── */
+  const HUB=17,MAX=44,TAPE=MAX*MAX-HUB*HUB,V=42;
   const pL=$("packL"),pR=$("packR"),hL=$("hubL"),hR=$("hubR");
   let aL=0,aR=0,lastP=-1,lastTs=performance.now();
-  function packs(p){
-    p=Math.min(1,Math.max(0,p));
-    if(Math.abs(p-lastP)<.0015)return;lastP=p;
-    const rl=Math.sqrt(HUB*HUB+TAPE*(1-p)),rr=Math.sqrt(HUB*HUB+TAPE*p);
-    pL.setAttribute("r",rl.toFixed(2));pR.setAttribute("r",rr.toFixed(2));
-    return [rl,rr];
-  }
   function reels(ts){
     const dt=Math.min(.1,(ts-lastTs)/1000);lastTs=ts;
-    const has=typeof buf!=="undefined"&&buf&&buf.duration;
-    const p=has?curT()/buf.duration:.35;
-    packs(p);
+    const has=typeof buf!=="undefined"&&buf&&buf.duration,p=has?Math.min(1,Math.max(0,curT()/buf.duration)):.3;
+    if(Math.abs(p-lastP)>.0015){lastP=p;pL.setAttribute("r",Math.sqrt(HUB*HUB+TAPE*(1-p)).toFixed(2));pR.setAttribute("r",Math.sqrt(HUB*HUB+TAPE*p).toFixed(2));}
     if(has&&playing&&!RM){
-      const sp=V*(typeof tempo==="number"?tempo:1);
-      const rl=+pL.getAttribute("r"),rr=+pR.getAttribute("r");
-      aL=(aL+sp/rl*dt*57.2958)%360;aR=(aR+sp/rr*dt*57.2958)%360;
+      const sp=V*(typeof tempo==="number"?tempo:1),rl=+pL.getAttribute("r"),rr=+pR.getAttribute("r");
+      aL=(aL+sp/rl*dt*57.3)%360;aR=(aR+sp/rr*dt*57.3)%360;
       hL.setAttribute("transform","rotate("+aL.toFixed(1)+")");hR.setAttribute("transform","rotate("+aR.toFixed(1)+")");
     }
   }
 
-  /* damm */
+  /* ── VU-mätare (vänster/höger) ── */
+  const vu=$("vu"),vx=vu.getContext("2d");let spl=null,anL=null,anR=null,td=new Float32Array(1024),nL=-1,nR=-1,lastVu="";
+  function lvl(an){an.getFloatTimeDomainData(td);let s=0;for(let i=0;i<td.length;i++)s+=td[i]*td[i];const db=10*Math.log10(s/td.length+1e-9)+12;return Math.max(0,Math.min(1,(db+20)/23));}
+  function drawVU(){
+    if(typeof AC!=="undefined"&&AC&&!spl&&bus){try{spl=AC.createChannelSplitter(2);anL=AC.createAnalyser();anR=AC.createAnalyser();anL.fftSize=anR.fftSize=1024;bus.connect(spl);spl.connect(anL,0);spl.connect(anR,1);}catch(e){spl=1;}}
+    let tl=0,tr=0;if(anL&&playing){tl=lvl(anL);tr=lvl(anR);}
+    nL=nL<0?tl:nL+(tl-nL)*(tl>nL?.35:.12);nR=nR<0?tr:nR+(tr-nR)*(tr>nR?.35:.12);
+    const W=vu.clientWidth,H=vu.clientHeight,d=Math.min(2,devicePixelRatio||1);if(!W)return;
+    const key=W+"|"+H+"|"+nL.toFixed(3)+"|"+nR.toFixed(3);if(key===lastVu)return;lastVu=key;
+    if(vu.width!==Math.round(W*d)){vu.width=Math.round(W*d);vu.height=Math.round(H*d);}
+    vx.setTransform(d,0,0,d,0,0);vx.clearRect(0,0,W,H);
+    const mw=(W-6)/2;
+    [[nL,"V"],[nR,"H"]].forEach(([v,lb],k)=>{
+      const x0=3+k*(mw+0),y0=3,w=mw-3,h=H-6,cx=x0+w/2,cy=y0+h*1.55,r=h*1.25;
+      const g=vx.createLinearGradient(0,y0,0,y0+h);g.addColorStop(0,"#fff1cf");g.addColorStop(1,"#f0d9a4");
+      vx.fillStyle=g;vx.beginPath();vx.roundRect?vx.roundRect(x0,y0,w,h,4):vx.rect(x0,y0,w,h);vx.fill();
+      const a0=-Math.PI/2-.62,a1=-Math.PI/2+.62;
+      vx.lineWidth=1.4;vx.strokeStyle="#2a2420";vx.beginPath();vx.arc(cx,cy,r*.86,a0,a0+(a1-a0)*.78);vx.stroke();
+      vx.strokeStyle="#d1361f";vx.lineWidth=2.6;vx.beginPath();vx.arc(cx,cy,r*.86,a0+(a1-a0)*.78,a1);vx.stroke();
+      vx.lineWidth=1;vx.strokeStyle="#2a2420";
+      for(let i=0;i<=10;i++){const a=a0+(a1-a0)*i/10;vx.beginPath();vx.moveTo(cx+Math.cos(a)*r*.86,cy+Math.sin(a)*r*.86);vx.lineTo(cx+Math.cos(a)*r*(i%5?.8:.76),cy+Math.sin(a)*r*(i%5?.8:.76));vx.stroke();}
+      vx.fillStyle="#5a4e44";vx.font="700 8px Archivo,sans-serif";vx.fillText("VU",x0+4,y0+h-4);vx.fillText(lb,x0+w-9,y0+h-4);
+      const a=a0+(a1-a0)*v;vx.strokeStyle="#151210";vx.lineWidth=1.3;vx.beginPath();vx.moveTo(cx,cy);vx.lineTo(cx+Math.cos(a)*r*.95,cy+Math.sin(a)*r*.95);vx.stroke();
+      vx.fillStyle="rgba(255,190,90,.12)";vx.fillRect(x0,y0,w,h*.45);
+    });
+  }
+
+  /* ── damm i lampljuset ── */
   const cv=$("fx"),cx=cv.getContext("2d");
   let fxOn=LS.get("ks_fx",true),W=0,H=0,dpr=1,P=[],slow=0,pulse=0;
-  function size(){
-    dpr=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;
-    cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
-    const n=Math.round(Math.min(90,Math.max(36,W*H/9000)));
-    while(P.length<n)P.push(mk(true));P.length=n;
-  }
-  function mk(any){
-    const z=.25+Math.random()*.75;
-    return{x:Math.random()*W,y:any?Math.random()*H:H+8,z,
-      vx:(Math.random()-.5)*.12,vy:-(.08+Math.random()*.22)*z,
-      s:.5+z*1.7,a:.12+z*.38,ph:Math.random()*6.28,gold:Math.random()<.12};
-  }
+  function size(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
+    const n=Math.round(Math.min(55,Math.max(24,W*H/14000)));while(P.length<n)P.push(mk(true));P.length=n;}
+  function mk(any){const z=.25+Math.random()*.75;return{x:Math.random()*W,y:any?Math.random()*H:H+8,z,vx:(Math.random()-.5)*.1,vy:-(.05+Math.random()*.16)*z,s:.5+z*1.4,a:.08+z*.25,ph:Math.random()*6.28};}
   function dust(){
-    cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,W,H);
-    if(!fxOn)return;
-    let e=0;
-    if(typeof vizAn!=="undefined"&&vizAn&&playing){for(let i=1;i<9;i++)e+=vizData[i];e/=8*255;}
-    slow+=(e-slow)*.04;pulse=Math.max(pulse*.9,Math.max(0,e-slow-.04)*7);
-    const boost=1+pulse*5,glow=Math.min(1,pulse);
+    cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,W,H);if(!fxOn)return;
+    let e=0;if(typeof vizAn!=="undefined"&&vizAn&&playing){for(let i=1;i<9;i++)e+=vizData[i];e/=8*255;}
+    slow+=(e-slow)*.04;pulse=Math.max(pulse*.9,Math.max(0,e-slow-.04)*7);const boost=1+pulse*4,glow=Math.min(1,pulse);
     for(const q of P){
-      if(!RM){q.ph+=.01;q.x+=q.vx+Math.sin(q.ph)*.08*q.z;q.y+=q.vy*boost;}
+      if(!RM){q.ph+=.01;q.x+=q.vx+Math.sin(q.ph)*.07*q.z;q.y+=q.vy*boost;}
       if(q.y<-8||q.x<-8||q.x>W+8)Object.assign(q,mk(false),{x:Math.random()*W});
-      const a=Math.min(.9,q.a*(1+glow*1.4));
-      cx.fillStyle=q.gold?"rgba(255,210,63,"+a+")":"rgba(222,236,255,"+a+")";
-      cx.beginPath();cx.arc(q.x,q.y,q.s*(1+glow*.5*q.z),0,6.2832);cx.fill();
+      const light=Math.max(.15,1-Math.abs(q.x/W-.5)*1.4)*(1-q.y/H*.6);
+      cx.fillStyle="rgba(255,214,160,"+Math.min(.8,q.a*light*(1+glow*1.3))+")";cx.beginPath();cx.arc(q.x,q.y,q.s,0,6.2832);cx.fill();
     }
   }
-  function loop(ts){
-    if(!document.hidden){reels(ts);dust();}
-    requestAnimationFrame(loop);
-  }
-  addEventListener("resize",size);size();
-  if(RM){reels(performance.now());dust();}
-  requestAnimationFrame(loop);
+  function loop(ts){if(!document.hidden){reels(ts);drawVU();dust();}requestAnimationFrame(loop);}
+  addEventListener("resize",size);size();requestAnimationFrame(loop);
   const sw=$("swFx");sw.classList.toggle("on",fxOn);
-  sw.onclick=()=>{fxOn=!fxOn;LS.set("ks_fx",fxOn);sw.classList.toggle("on",fxOn);if(!fxOn)cx.clearRect(0,0,W,H);};
+  sw.onclick=()=>{fxOn=!fxOn;LS.set("ks_fx",fxOn);sw.classList.toggle("on",fxOn);};
+
+  /* ── kassetten i luckan ── */
+  const door=$("door"),dc=$("deckCass");let inId=null;
+  function syncDeck(){
+    const id=cur?cur.id:null;
+    door.classList.toggle("want",!cur&&lib.length>0);
+    if(id===inId){if(cur){$("deckTitle").textContent=cur.title||"—";$("deckArtist").textContent=cur.artist||"";}return;}
+    inId=id;
+    if(!cur){dc.hidden=true;$("doorEmpty").hidden=false;return;}
+    const[sh,st]=shellOf(cur.id);dc.style.setProperty("--shell",sh);dc.style.setProperty("--stripe",st);
+    $("deckTitle").textContent=cur.title||"—";$("deckArtist").textContent=cur.artist||"";
+    $("doorEmpty").hidden=true;dc.hidden=false;dc.classList.remove("out","in");void dc.offsetWidth;dc.classList.add("in");
+  }
+  /* mata ut */
+  $("bEject").onclick=()=>{
+    if(!cur){toast("Ingen kassett i");return;}
+    dc.classList.remove("in");dc.classList.add("out");
+    setTimeout(()=>{cancelFg();hardReset();cur=null;LS.set("ks_last","");inId=null;dc.hidden=true;$("doorEmpty").hidden=false;
+      $("tCur").textContent="0:00";$("tDur").textContent="0:00";$("metaKey").hidden=true;$("aiBadge").hidden=true;
+      try{const c=$("waveC");c.getContext("2d").clearRect(0,0,c.width,c.height);}catch(e){}
+      renderLib();updateAll();},300);
+  };
+
+  /* ── hyllan ── */
+  const shelf=$("shelf");
+  function shortStatus(rec){
+    if(bg.id===rec.id)return["förbereds"+(bg.p?" "+bg.p+" %":""),"run"];
+    if(rec===cur&&(preparing||ai.state==="run"||syncBusy))return["förbereds","run"];
+    if(rec.err)return["gick inte","err"];
+    if(rec.mono)return["mono",""];
+    if(rec.hasStems&&rec.lyrState==="synced")return["klar · text i takt","ok"];
+    if(rec.hasStems)return["sång bort","ok"];
+    return[sepMode==="ai"?"väntar på AI":"snabbläge",""];
+  }
+  function renderShelf(){
+    const keep=shelf.querySelector(".blank");shelf.querySelectorAll(".cass.mini").forEach(e=>e.remove());
+    const frag=document.createDocumentFragment();
+    lib.forEach(rec=>{
+      const[sh,st]=shellOf(rec.id),[t,c]=shortStatus(rec),el=document.createElement("div");
+      el.className="cass mini"+(rec===cur?" inPlayer":"");el.dataset.id=rec.id;el.title=rec.title;
+      el.style.setProperty("--shell",sh);el.style.setProperty("--stripe",st);
+      el.innerHTML='<div class="cLbl"><span class="cSide">A</span><b>'+esc(rec.title||"—")+'</b><span class="st2 '+c+'">'+esc(t)+'</span></div><div class="cWin"><i></i><i></i></div>';
+      frag.appendChild(el);
+    });
+    shelf.insertBefore(frag,keep.nextSibling);
+    $("shelfHint").textContent=!lib.length?"Lägg till dina låtar — de blir kassetter här":cur?"Dra en annan kassett upp för att byta låt":"Dra en kassett upp till bandspelaren";
+    syncDeck();
+  }
+  const _rl=renderLib;renderLib=function(){_rl();renderShelf();};
+  bindFiles("fiShelf",addFiles);
+  setInterval(()=>{syncDeck();},1000);
+
+  /* dra en kassett upp i luckan (eller tryck på den) */
+  let st=null,gh=null;
+  const inDoor=(x,y)=>{const r=door.getBoundingClientRect();return x>r.left-20&&x<r.right+20&&y>r.top-30&&y<r.bottom+30;};
+  function insert(id){
+    if(cur&&cur.id===id)return;
+    if(cur){dc.classList.remove("in");dc.classList.add("out");}
+    setTimeout(()=>openSong(id,{play:true}),cur?260:0);
+  }
+  shelf.addEventListener("pointerdown",e=>{
+    const c=e.target.closest(".cass.mini");if(!c||c.classList.contains("inPlayer"))return;
+    st={x:e.clientX,y:e.clientY,c,id:c.dataset.id,t:performance.now(),pid:e.pointerId,drag:false};
+  });
+  addEventListener("pointermove",e=>{
+    if(!st||e.pointerId!==st.pid)return;
+    const dx=e.clientX-st.x,dy=e.clientY-st.y;
+    if(!st.drag){
+      if(Math.abs(dx)>12&&Math.abs(dx)>Math.abs(dy)){st=null;return;}   /* hyllan scrollas i sidled */
+      if(dy<-10&&Math.abs(dy)>Math.abs(dx)){
+        st.drag=true;const r=st.c.getBoundingClientRect();
+        gh=st.c.cloneNode(true);gh.classList.add("ghost");gh.style.left=r.left+"px";gh.style.top=r.top+"px";gh.style.width=r.width+"px";gh.style.height=r.height+"px";
+        st.r=r;document.body.appendChild(gh);st.c.style.opacity=".25";
+        try{st.c.setPointerCapture(e.pointerId);}catch(x){}
+        if(navigator.vibrate)try{navigator.vibrate(8);}catch(x){}
+      }else return;
+    }
+    gh.style.left=(st.r.left+dx)+"px";gh.style.top=(st.r.top+dy)+"px";
+    door.classList.toggle("over",inDoor(e.clientX,e.clientY));
+    e.preventDefault();
+  },{passive:false});
+  function end(e){
+    if(!st||e.pointerId!==st.pid)return;
+    const s=st;st=null;door.classList.remove("over");
+    if(!s.drag){
+      if(e.type==="pointerup"&&performance.now()-s.t<500&&Math.hypot(e.clientX-s.x,e.clientY-s.y)<10)insert(s.id);
+      return;
+    }
+    const g=gh;gh=null;
+    if(e.type==="pointerup"&&inDoor(e.clientX,e.clientY)){
+      const r=door.getBoundingClientRect();g.classList.add("back");g.style.left=(r.left+r.width/2-s.r.width/2)+"px";g.style.top=(r.top+12)+"px";g.style.opacity="0";g.style.transform="scale(1.6)";
+      setTimeout(()=>{g.remove();s.c.style.opacity="";},260);
+      if(navigator.vibrate)try{navigator.vibrate([10,40,18]);}catch(x){}
+      insert(s.id);
+    }else{
+      g.classList.add("back");g.style.left=s.r.left+"px";g.style.top=s.r.top+"px";g.style.transform="none";
+      setTimeout(()=>{g.remove();s.c.style.opacity="";},260);
+    }
+  }
+  addEventListener("pointerup",end);addEventListener("pointercancel",end);
+  renderShelf();
 })();
 </script>
 </body>
