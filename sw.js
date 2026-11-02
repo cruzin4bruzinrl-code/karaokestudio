@@ -1,7 +1,7 @@
 /* KaraokeStudio service worker
    1) Appskalet fungerar offline (nätet först, så nya versioner alltid syns direkt).
    2) Sidan får COOP/COEP-huvuden → flertrådad, snabbare AI även utan serverinställningar. */
-const SHELL="ks-shell-v4";
+const SHELL="ks-shell-v5";
 self.addEventListener("install",()=>self.skipWaiting());
 self.addEventListener("activate",e=>e.waitUntil(self.clients.claim()));
 function isolate(res){
