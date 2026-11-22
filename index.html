@@ -568,6 +568,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:4px;height
 .instrTgl{margin:-4px 0 6px}
 #sh-text .instrTgl{margin:8px 0 0;border-bottom:none;border-top:1px solid var(--md-outV);padding-top:12px}
 body:has(#tapbar:not([hidden])) #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 250px)}
+.tapbar{gap:8px;padding:10px 10px 10px 14px}
+.tapBrk{flex:none;height:40px;padding:0 12px;border:none;border-radius:20px;background:var(--md-secC);color:var(--md-onSecC);font-size:12px;font-weight:600;line-height:1.1;cursor:pointer;max-width:84px;transition:border-radius .3s var(--spring)}
+.tapBrk:active{border-radius:10px}
+.tapbar .tapBig{padding:0 18px;height:48px}
 </style>
 </head>
 <body>
@@ -903,6 +907,7 @@ body:has(#tapbar:not([hidden])) #toast{bottom:calc(env(safe-area-inset-bottom,0p
 <div class="tapbar" id="tapbar" hidden>
   <div style="flex:1;min-width:0"><div class="tt">Tap-synk</div><div class="tl" id="tapLine"></div><div class="tc" id="tapCount"></div></div>
   <button class="iconBtn tapUndo" id="bTapUndo" title="Ångra senaste tryck">↶</button>
+  <button class="tapBrk" id="bTapBrk" title="Mellanspel: texten står still tills du trycker nästa rad">♪ Mellan&shy;spel</button>
   <button class="tapBig" id="bTap">TAP</button>
   <button class="iconBtn" id="bTapX" title="Stäng"><svg class="ic"><use href="#icX"/></svg></button>
 </div>
@@ -2100,7 +2105,7 @@ async function openSong(id,o){
     $("songA").textContent=rec.artist||(stereo?"":"Monofil");$("tDur").textContent=fmt(b.duration);
     /* text */
     lyrOffset=rec.lyrOffset||0;
-    lyrics=rec.lyrState==="rough"?spreadLines(rec.lyrics.map(x=>x.t)):rec.lyrics.map(x=>({t:x.t,s:x.s}));
+    lyrics=rec.lyrState==="rough"?spreadLines(rec.lyrics.map(x=>x.t)):rec.lyrics.map(x=>Object.assign({},x));
     lyricsChanged(false);
     /* sparad förberedelse? då är låten klar direkt */
     if(rec.hasStems&&rec.ana){
@@ -2436,8 +2441,8 @@ function updLyrics(t,force){
   else{
     const ln=L[ai_],s0=ln.s,has=ai_+1<L.length,s1=has?L[ai_+1].s:s0+6,span=s1-s0,rel=tt-s0;
     /* sångaren har sjungit klart raden och nästa dröjer → visa paus/nedräkning */
-    const done=ln.e!=null?(rel>ln.e+1.2&&s1-tt>2.2):(span>9&&rel>Math.min(7,span*.6));
-    if(done){const dt=s1-tt;setLyr(ln.t,has&&dt<=3.2?dots(dt):"♪",has?L[ai_+1].t:"","gap",ai_);}
+    const done=ln.brk?rel>=ln.e:ln.e!=null?(rel>ln.e+1.2&&s1-tt>2.2):(span>9&&rel>Math.min(7,span*.6));
+    if(done){const dt=s1-tt;setLyr(ln.t,has&&dt<=3.2?dots(dt):ln.brk?"♪ mellanspel ♪":"♪",has?L[ai_+1].t:"","gap",ai_);}
     else{setLyr(ai_>0?L[ai_-1].t:"",ln.t||"♪",has?L[ai_+1].t:"","",ai_,ln);paintWords(ln,rel,span);}
   }
   el.style.setProperty("--p",(p*100).toFixed(1)+"%");
@@ -2982,12 +2987,12 @@ async function runPipeline(forceAI){
 let wordsBusy=false;
 async function ensureWords(){
   const rec=cur;
-  if(!rec||!buf||wordsBusy||rec.wordsTried||rec.lyrState!=="synced"||!lyrSorted.length||lyrSorted.every(l=>l.w))return;
+  if(!rec||!buf||wordsBusy||rec.wordsTried||rec.instr||rec.lyrState!=="synced"||!lyrSorted.length||lyrSorted.every(l=>l.w))return;
   if(!base||!base.voc||!(ai.state==="done"||rec.hasStems))return;
   wordsBusy=true;rec.wordsTried=true;const mySong=songId;
   try{
     const r=await oneShot({type:"words",audio:monoOf(base.voc.L,base.voc.R),sr:buf.sampleRate,lines:lyrSorted.map(l=>l.t),times:lyrSorted.map(l=>l.s)},null,{done:"wordsDone",limit:60000}).promise;
-    if(mySong===songId&&r&&r.wt){lyrSorted.forEach((l,i)=>{const q=r.wt[i];if(q&&q.w&&!l.w){l.w=q.w;l.e=q.e;}});lyricsChanged();}
+    if(mySong===songId&&r&&r.wt){lyrSorted.forEach((l,i)=>{const q=r.wt[i];if(q&&q.w&&!l.w&&!l.brk){l.w=q.w;l.e=q.e;}});lyricsChanged();}
   }catch(e){console.warn("ordtider",e);}
   wordsBusy=false;
 }
@@ -3093,7 +3098,7 @@ function updateKnobLabels(){
 }
 
 /* ── texter ── */
-function packLyr(x){const o={t:x.t,s:+x.s.toFixed(2)};if(x.w&&x.w.length){o.w=x.w;o.e=x.e;}return o;}
+function packLyr(x){const o={t:x.t,s:+x.s.toFixed(2)};if(x.w&&x.w.length){o.w=x.w;o.e=x.e;}else if(x.e!=null)o.e=x.e;if(x.brk)o.brk=1;return o;}
 const withW=(lines,times,wt)=>lines.map((t,i)=>{const o={t,s:+times[i].toFixed(2)};const q=wt&&wt[i];if(q&&q.w){o.w=q.w;o.e=q.e;}return o;});
 function lyricsChanged(save){
   lyrSorted=[...lyrics].sort((a,b)=>a.s-b.s);
@@ -3237,12 +3242,25 @@ function startTapSync(fromStart){
   $("tapbar").hidden=false;updTap();
 }
 $("bTapMode").onclick=()=>startTapSync(!!(cur&&cur.instr&&cur.lyrInfo!=="tryckt i takt"));
-$("bTapUndo").onclick=()=>{if(!tapMode||!tapIdx)return;tapIdx--;const h=tapHist.pop();if(h)lyrSorted[tapIdx].s=h;lyricsChanged();updTap();seek(Math.max(0,lyrSorted[tapIdx].s+lyrOffset-3));};
+$("bTapUndo").onclick=()=>{
+  if(!tapMode||!tapHist.length)return;const h=tapHist.pop();
+  if(h.brk!=null){const l=lyrSorted[h.brk];if(l){delete l.e;delete l.brk;}lyricsChanged();updTap();toast("Mellanspelet borttaget");return;}
+  tapIdx=h.i;lyrSorted[tapIdx].s=h.s;lyricsChanged();updTap();seek(Math.max(0,lyrSorted[tapIdx].s+lyrOffset-3));
+};
+/* mellanspel: raden du sjöng tar slut nu — texten står still tills du trycker nästa rad */
+$("bTapBrk").addEventListener("pointerdown",e=>{
+  e.preventDefault();
+  if(!tapMode||!tapIdx){toast("Tryck först på raden som sjungs, sen Mellanspel när den är slut");return;}
+  const lag=Math.max(0,(performance.now()-(e.timeStamp||performance.now()))/1000)*(ver?ver.T:1);
+  const l=lyrSorted[tapIdx-1],t=curT()-lag-lyrOffset;if(t<=l.s+.2)return;
+  tapHist.push({brk:tapIdx-1});l.e=+(t-l.s).toFixed(2);l.brk=1;delete l.w;
+  lyricsChanged();lastLyrKey="";updLyrics(curT(),true);
+});
 $("bTap").addEventListener("pointerdown",e=>{
   e.preventDefault();
   if(!tapMode||tapIdx>=lyrSorted.length)return;
   const lag=Math.max(0,(performance.now()-(e.timeStamp||performance.now()))/1000)*(ver?ver.T:1);
-  const ln=lyrSorted[tapIdx];tapHist.push(ln.s);ln.s=+Math.max(0,curT()-lag-lyrOffset).toFixed(2);delete ln.w;delete ln.e;
+  const ln=lyrSorted[tapIdx];tapHist.push({i:tapIdx,s:ln.s});ln.s=+Math.max(0,curT()-lag-lyrOffset).toFixed(2);delete ln.w;delete ln.e;delete ln.brk;
   /* raderna efter flyttas med, så att de inte hamnar före den du just tryckte */
   for(let k=tapIdx+1;k<lyrSorted.length;k++)if(lyrSorted[k].s<=ln.s)lyrSorted[k].s=+(ln.s+.5*(k-tapIdx)).toFixed(2);
   tapIdx++;
