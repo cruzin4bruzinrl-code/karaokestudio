@@ -2437,12 +2437,15 @@ function updLyrics(t,force){
   const tt=t-lyrOffset;
   let ai_=-1,lo=0,hi=L.length-1;while(lo<=hi){const m=(lo+hi)>>1;if(L[m].s<=tt){ai_=m;lo=m+1;}else hi=m-1;}
   let p=0;
-  if(ai_<0){const dt=L[0].s-tt;setLyr("",dt<=3.2?dots(dt):"♪  intro  ♪",L[0].t,"gap",-1);}
+  /* under tryck-i-takt styr bara dina tryck: nästa rad visas först när du tryckt TAP */
+  if(tapMode&&ai_>=tapIdx)ai_=tapIdx-1;
+  const waitTap=tapMode&&ai_+1>=tapIdx;
+  if(ai_<0){const dt=L[0].s-tt;setLyr("",!waitTap&&dt<=3.2?dots(dt):"♪  intro  ♪",L[0].t,"gap",-1);}
   else{
-    const ln=L[ai_],s0=ln.s,has=ai_+1<L.length,s1=has?L[ai_+1].s:s0+6,span=s1-s0,rel=tt-s0;
+    const ln=L[ai_],s0=ln.s,has=ai_+1<L.length,s1=has&&!waitTap?L[ai_+1].s:s0+(waitTap?30:6),span=s1-s0,rel=tt-s0;
     /* sångaren har sjungit klart raden och nästa dröjer → visa paus/nedräkning */
-    const done=ln.brk?rel>=ln.e:ln.e!=null?(rel>ln.e+1.2&&s1-tt>2.2):(span>9&&rel>Math.min(7,span*.6));
-    if(done){const dt=s1-tt;setLyr(ln.t,has&&dt<=3.2?dots(dt):ln.brk?"♪ mellanspel ♪":"♪",has?L[ai_+1].t:"","gap",ai_);}
+    const done=ln.brk?rel>=ln.e:waitTap?false:ln.e!=null?(rel>ln.e+1.2&&s1-tt>2.2):(span>9&&rel>Math.min(7,span*.6));
+    if(done){const dt=s1-tt;setLyr(ln.t,has&&!waitTap&&dt<=3.2?dots(dt):ln.brk?"♪ mellanspel ♪":"♪",has?L[ai_+1].t:"","gap",ai_);}
     else{setLyr(ai_>0?L[ai_-1].t:"",ln.t||"♪",has?L[ai_+1].t:"","",ai_,ln);paintWords(ln,rel,span);}
   }
   el.style.setProperty("--p",(p*100).toFixed(1)+"%");
