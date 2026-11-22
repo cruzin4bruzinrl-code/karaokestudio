@@ -1160,6 +1160,146 @@ body:has(#tapbar:not([hidden])) #toast{bottom:calc(env(safe-area-inset-bottom,0p
 [data-theme="synthwave"] .cass.blank{font-size:10px;overflow:hidden}
 [data-theme="mixerbord"] .screen{min-height:150px}
 [data-theme="synthwave"] .cass.blank{width:78px;margin-left:8px}
+
+
+/* ═════════ Rörelse: allt lever med musiken ═════════
+   deck.js skriver --bass --drum --inst --voc --beat (0–1) på body varje bildruta. */
+:root{--bass:0;--drum:0;--inst:0;--voc:0;--beat:0}
+body{--bass:0;--drum:0;--inst:0;--voc:0;--beat:0}
+
+/* omflyttning: när temat byts eller låten startar glider varje del till sin nya plats */
+html.vt .top{view-transition-name:v-top}html.vt .screen{view-transition-name:v-scr}html.vt .door{view-transition-name:v-door}
+html.vt .levers{view-transition-name:v-lev}html.vt .counter{view-transition-name:v-cnt}html.vt .tapeStrip{view-transition-name:v-wave}
+html.vt .transport{view-transition-name:v-tr}html.vt .modeWrap{view-transition-name:v-md}html.vt .shelf{view-transition-name:v-shelf}
+html.vt .dock{view-transition-name:v-dock}
+::view-transition-group(*){animation-duration:.62s;animation-timing-function:cubic-bezier(.3,1.25,.4,1)}
+::view-transition-old(*),::view-transition-new(*){height:100%;object-fit:fill}
+::view-transition-group(v-door){animation-duration:.75s}
+::view-transition-group(v-shelf){animation-duration:.7s;animation-delay:.04s}
+::view-transition-group(v-dock){animation-duration:.5s}
+
+/* uppstart: delarna flyger in, olika för varje tema */
+@keyframes inUp{from{opacity:0;transform:translateY(40px) scale(.96)}}
+@keyframes inDrop{0%{opacity:0;transform:translateY(-90px)}60%{opacity:1;transform:translateY(10px)}80%{transform:translateY(-4px)}}
+@keyframes inZoom{from{opacity:0;transform:perspective(500px) translateZ(-260px) rotateX(30deg)}}
+@keyframes inToss{from{opacity:0;transform:translate(-120px,30px) rotate(-14deg)}}
+@keyframes inFader{from{opacity:0;transform:translateY(120%)}}
+@keyframes inGrow{from{opacity:0;transform:scale(.82);border-radius:60px}}
+.app.enter :is(.top,.screen,.door,.levers,.counter,.tapeStrip,.transport,.modeWrap,.kBox,.shelf,.dock){animation:inUp .7s cubic-bezier(.2,.9,.25,1.15) both}
+.app.enter .top{animation-delay:0s}.app.enter .screen{animation-delay:.06s}.app.enter .door{animation-delay:.12s}.app.enter .levers{animation-delay:.16s}
+.app.enter .counter{animation-delay:.2s}.app.enter .tapeStrip{animation-delay:.22s}.app.enter .transport{animation-delay:.26s}.app.enter .modeWrap{animation-delay:.3s}
+.app.enter .kBox{animation-delay:.32s}.app.enter .shelf{animation-delay:.36s}.app.enter .dock{animation-delay:.42s}
+[data-theme="jukebox"] .app.enter :is(.top,.screen,.door,.levers,.counter,.tapeStrip,.transport,.modeWrap,.kBox,.shelf,.dock){animation-name:inDrop;animation-duration:.9s}
+[data-theme="synthwave"] .app.enter :is(.top,.screen,.door,.levers,.counter,.tapeStrip,.transport,.modeWrap,.kBox,.shelf,.dock){animation-name:inZoom;animation-duration:1s}
+[data-theme="mixtape"] .app.enter :is(.top,.screen,.door,.levers,.counter,.tapeStrip,.transport,.modeWrap,.kBox,.shelf,.dock){animation-name:inToss}
+[data-theme="mixerbord"] .app.enter :is(.top,.screen,.door,.levers,.counter,.tapeStrip,.transport,.modeWrap,.kBox,.shelf,.dock){animation-name:inFader;animation-duration:.8s}
+[data-theme^="m3"] .app.enter :is(.top,.screen,.door,.levers,.counter,.tapeStrip,.transport,.modeWrap,.kBox,.shelf,.dock){animation-name:inGrow}
+
+/* ── allmänt: play-knappen dunkar med takten, sjungna ord hoppar fram ── */
+body.playing .tb.play{scale:calc(1 + var(--beat)*.09);transition:scale .08s}
+.lCur .w{display:inline-block;transition:transform .32s cubic-bezier(.2,1.6,.4,1),opacity .3s,filter .3s}
+body.playing .lCur .w.now{transform:translateY(-2px) scale(1.06)}
+
+/* ── Jukebox: bågen glöder i takt, lappar gungar ── */
+[data-theme="jukebox"] .screen{box-shadow:0 0 calc(8px + var(--beat)*34px) rgba(255,220,120,calc(.25 + var(--beat)*.5)),inset 0 0 30px rgba(0,0,0,.5)}
+[data-theme="jukebox"] .cass.mini{animation:sway 3s ease-in-out infinite;transform-origin:50% 0}
+[data-theme="jukebox"] .cass.mini:nth-child(even){animation-delay:-1.5s}
+@keyframes sway{50%{rotate:1.6deg}}
+[data-theme="jukebox"] body.playing .lCur .w.now,[data-theme="jukebox"].x{text-shadow:0 0 14px #ffd36b}
+
+/* ── Freestyle: hela apparaten studsar på basen, kassettfönstret krymper när låten spelar ── */
+[data-theme="freestyle"]{--morph:1}
+[data-theme="freestyle"] .door{translate:0 calc(var(--bass)*-4px)}
+[data-theme="freestyle"] .knob{rotate:calc(var(--inst)*20deg - 10deg);transition:rotate .1s}
+[data-theme="freestyle"] body.playing .app{grid-template-rows:auto 92px minmax(120px,1fr) auto auto 118px auto auto}
+[data-theme="freestyle"] body.playing .lCur .w:not(.sung){opacity:.45}
+
+/* ── Synthwave: texten glitchar, skärmen lutar med basen ── */
+[data-theme="synthwave"] body::after{display:none}
+[data-theme="synthwave"]{--bodyBg:#0b0420}
+[data-theme="synthwave"] .screen{transform:perspective(700px) rotateX(calc(var(--bass)*7deg));transform-origin:50% 100%}
+[data-theme="synthwave"] body.playing .lCur .w.now{animation:glitch .45s steps(3) infinite}
+@keyframes glitch{0%{text-shadow:-3px 0 #ff2fb5,3px 0 #3ff6ff;translate:0}33%{text-shadow:3px 0 #ff2fb5,-3px 0 #3ff6ff;translate:1px -1px}66%{text-shadow:-1px 0 #ff2fb5,2px 0 #3ff6ff;translate:-1px 1px}}
+[data-theme="synthwave"] .tb{box-shadow:0 0 calc(8px + var(--beat)*22px) rgba(63,246,255,.75)}
+[data-theme="synthwave"] .badge{animation:flick 4s steps(1) infinite}
+@keyframes flick{0%,100%{opacity:1}42%{opacity:.4}43%{opacity:1}71%{opacity:.6}72%{opacity:1}}
+
+/* ── Fickstudio: rattar vrids med musiken, ord tänds ett i taget ── */
+[data-theme="fickstudio"] .knob{rotate:calc(var(--voc)*24deg - 12deg);transition:rotate .1s}
+[data-theme="fickstudio"] .lCur .w:not(.sung){opacity:.3}
+[data-theme="fickstudio"] .lCur .w.now{color:#ff6200}
+
+/* ── Mixtape: polaroiden gungar på trummorna, skrivna ord stryks under ── */
+[data-theme="mixtape"]{--morph:1}
+[data-theme="mixtape"] .door{rotate:calc(var(--drum)*5deg - 1deg);translate:0 calc(var(--beat)*-6px);transition:rotate .12s,translate .12s}
+[data-theme="mixtape"] .badge{rotate:calc(var(--bass)*-3deg)}
+[data-theme="mixtape"] .lCur .w{background:linear-gradient(#ff4d2e,#ff4d2e) 0 100%/0 3px no-repeat;transition:background-size .3s,transform .3s}
+[data-theme="mixtape"] .lCur .w.sung{background-size:100% 3px}
+[data-theme="mixtape"] body.playing .app{grid-template-rows:112px minmax(150px,1fr) auto auto auto 96px auto}
+[data-theme="mixtape"] .cass.mini{animation:inToss .5s backwards}
+[data-theme="mixtape"] .cass.mini:nth-child(2){animation-delay:.05s}[data-theme="mixtape"] .cass.mini:nth-child(3){animation-delay:.1s}[data-theme="mixtape"] .cass.mini:nth-child(4){animation-delay:.15s}
+
+/* ── Mixerbord: kanalerna lyser, tidsdisplayen flimrar ── */
+[data-theme="mixerbord"] .lev{box-shadow:inset 0 0 calc(var(--beat)*18px) rgba(80,255,120,.25)}
+[data-theme="mixerbord"] .counter{box-shadow:0 0 calc(var(--beat)*16px) rgba(255,220,120,.8)}
+
+/* ── Material Lila: kakan andas med basen; när låten spelar krymper den och texten tar över ── */
+[data-theme="m3-lila"]{--morph:1}
+[data-theme="m3-lila"] .door{scale:calc(1 + var(--bass)*.07);transition:scale .1s}
+[data-theme="m3-lila"] body.playing .app{grid-template-areas:"top top top top top top" "door door cnt cnt cnt cnt" "wave wave wave wave wave wave" "scr scr scr scr scr scr" "tr tr tr tr tr tr" "md md md md md md" "dock dock dock dock dock dock";
+  grid-template-rows:auto 112px auto 1fr auto auto auto}
+[data-theme="m3-lila"] body.playing .door{max-height:112px}
+[data-theme="m3-lila"] body.playing .inDeck{scale:.56}
+[data-theme="m3-lila"] body.playing .counter{flex-direction:column;align-items:flex-start;justify-content:center;gap:8px}
+[data-theme="m3-lila"] body.playing .cTime{font-size:28px;font-weight:700}
+[data-theme="m3-lila"] body.playing .lCur{font-size:28px}
+[data-theme="m3-lila"] .lCur .w:not(.sung){opacity:.4}
+
+/* ── Material Korall: kinetisk text — varje ord studsar in när det sjungs ── */
+[data-theme="m3-korall"] .lCur{font-size:40px;line-height:1.08;scale:calc(1 + var(--voc)*.035)}
+[data-theme="m3-korall"] .lCur .w:not(.sung){opacity:.28;transform:translateY(.3em) scale(.88);filter:blur(1px)}
+[data-theme="m3-korall"] .lCur .w.now{transform:scale(1.16) rotate(-2.5deg);color:var(--md-pri)}
+[data-theme="m3-korall"] .transport{translate:0 calc(var(--beat)*-3px)}
+
+/* ── Material Grön: listan först — när låten spelar glider listan ner och texten växer ── */
+[data-theme="m3-gron"]{--morph:1}
+[data-theme="m3-gron"] body.playing .app{grid-template-areas:"top top top top top top" "door door door door door door" "scr scr scr scr scr scr" "tr tr tr tr tr tr" "wave wave wave wave wave wave" "ks md md md md kt" "shelf shelf shelf shelf shelf shelf" "dock dock dock dock dock dock";
+  grid-template-rows:auto auto 1fr auto auto auto 112px auto}
+[data-theme="m3-gron"] body.playing .screen{border-radius:28px;padding:16px}
+[data-theme="m3-gron"] body.playing .screen :is(.lPrev,.lNext){display:block}
+[data-theme="m3-gron"] body.playing .lyr{text-align:center}
+[data-theme="m3-gron"] body.playing .lCur{font-size:26px}
+[data-theme="m3-gron"] body.playing .transport{border-radius:28px;justify-content:center;padding:6px}
+[data-theme="m3-gron"] body.playing .transport .tb{display:flex}
+[data-theme="m3-gron"] body.playing .transport .tb.play{width:84px}
+[data-theme="m3-gron"] body.playing #bEject,[data-theme="m3-gron"] body.playing #bBack,[data-theme="m3-gron"] body.playing #bFwd{display:none}
+[data-theme="m3-gron"] .tb.play{transition:border-radius .25s}
+[data-theme="m3-gron"] body.beatB .tb.play{border-radius:26px}
+
+/* ── Material Svart: reglagen glöder efter sin egen kanal ── */
+[data-theme="m3-amoled"] .lev .lf{box-shadow:0 0 22px rgba(170,199,255,.35)}
+[data-theme="m3-amoled"] .lev[data-k="bass"] .lt{box-shadow:0 0 calc(var(--bass)*34px) rgba(170,199,255,.55)}
+[data-theme="m3-amoled"] .lev[data-k="drum"] .lt{box-shadow:0 0 calc(var(--drum)*34px) rgba(170,199,255,.55)}
+[data-theme="m3-amoled"] .lev[data-k="inst"] .lt{box-shadow:0 0 calc(var(--inst)*34px) rgba(170,199,255,.55)}
+[data-theme="m3-amoled"] .lev[data-k="voc"] .lt{box-shadow:0 0 calc(var(--voc)*34px) rgba(170,199,255,.55)}
+[data-theme="m3-amoled"] .lCur .w:not(.sung){opacity:.35}
+
+/* ── Material Rosa: orden studsar som ballonger ── */
+[data-theme="m3-rosa"] .lCur .w.now{transform:translateY(-8px) rotate(-4deg) scale(1.1)}
+[data-theme="m3-rosa"] .lCur .w.sung:not(.now){transform:rotate(1deg)}
+[data-theme="m3-rosa"] .counter{rotate:calc(var(--beat)*-2deg)}
+[data-theme="m3-rosa"] body::after{scale:calc(1 + var(--bass)*.15)}
+[data-theme="m3-rosa"] body::before{scale:calc(1 + var(--drum)*.2)}
+
+/* ── Kassettdäcken: spolarnas fönster lyser på slagen ── */
+:is(:not([data-theme]),[data-theme="aluminium"],[data-theme="ritning"],[data-theme="m3-turkos"]) .door{box-shadow:0 0 calc(var(--beat)*26px) rgba(255,190,90,calc(var(--beat)*.6))}
+
+@media (prefers-reduced-motion: reduce){.app.enter *{animation:none!important}body.playing .tb.play{scale:1}}
+[data-theme="fickstudio"]{--bodyBg:#eeece6}
+[data-theme="fickstudio"] .app{background:transparent}
+[data-theme="fickstudio"] .screen{background:rgba(12,12,12,.55)}
+[data-theme="mixtape"] body.playing .shelfRow{height:96px}
+[data-theme="synthwave"] .shelfRow{padding-left:12px}
 </style>
 </head>
 <body>
@@ -2436,8 +2576,16 @@ function readTheme(){
 function setTheme(id,anim){
   const go=()=>{if(id)document.documentElement.dataset.theme=id;else delete document.documentElement.dataset.theme;readTheme();renderThemes();try{if(buf)drawWave(curT()/buf.duration);}catch(e){}};
   LS.set("ks_theme",id);
-  if(anim&&document.startViewTransition&&!matchMedia("(prefers-reduced-motion: reduce)").matches)document.startViewTransition(go);else go();
+  if(anim)morph(go);else go();
 }
+/* omflyttning med glidande delar (View Transitions) */
+function morph(fn){
+  const H=document.documentElement;
+  if(!document.startViewTransition||matchMedia("(prefers-reduced-motion: reduce)").matches||document.hidden){fn();return;}
+  H.classList.add("vt");
+  try{const v=document.startViewTransition(fn);v.finished.finally(()=>H.classList.remove("vt"));}catch(e){H.classList.remove("vt");fn();}
+}
+function enterAnim(){const a=document.querySelector(".app");if(!a)return;a.classList.remove("enter");void a.offsetWidth;a.classList.add("enter");setTimeout(()=>a.classList.remove("enter"),1500);}
 function renderThemes(){
   const el=document.getElementById("themeGrid");if(!el)return;
   const cur=document.documentElement.dataset.theme||"";let h="",g="";
@@ -2448,7 +2596,7 @@ function renderThemes(){
   el.innerHTML=h+"</div>";
   el.querySelectorAll(".thm").forEach(b=>b.onclick=()=>setTheme(b.dataset.t,true));
 }
-readTheme();renderThemes();
+readTheme();renderThemes();requestAnimationFrame(enterAnim);
 let AC=null,bus=null,vizAn=null,outBus=null,shift=null,shiftR=1,taps=null;
 /* ── direkt tonart/tempo: tempot ändras med uppspelningshastigheten, tonhöjden rättas i realtid av en
    kornig tonhöjdsflyttare (två överlappande läshuvuden). Den finare versionen räknas fram i bakgrunden
@@ -2968,7 +3116,10 @@ function seek(t){if(!buf)return;t=clamp(t,0,buf.duration);if(playing)startAt(t);
 let _lastPlay=null;
 function updatePlay(){
   const ic=playing?"❚❚":"▶";$("bPlay").textContent=ic;$("sPlay").textContent=ic;
-  document.body.classList.toggle("playing",playing);
+  if(document.body.classList.contains("playing")!==playing){
+    const flip=()=>document.body.classList.toggle("playing",playing);
+    if(getComputedStyle(document.documentElement).getPropertyValue("--morph").trim()==="1")morph(flip);else flip();
+  }
   try{if(navigator.mediaSession)navigator.mediaSession.playbackState=playing?"playing":"paused";}catch(e){}
   if(_lastPlay!==playing){_lastPlay=playing;if($("sh-lib").classList.contains("on"))renderLib();}
 }
@@ -3044,7 +3195,7 @@ function setLyr(prev,main,next,cls,idx,ln){
   const changedMain=lastLyrKey.split("\u0001")[1]!==main;lastLyrKey=key;
   $("lPrev").textContent=prev;$("lNext").textContent=next;
   const cs=$("lCurS");wordEls=null;wordState="";
-  if(ln&&cls===""){cs.innerHTML=String(main).trim().split(/\s+/).map(w=>'<span class="w">'+esc(w)+'</span>').join(" ");wordEls=cs.children;}
+  if(ln&&cls===""){cs.innerHTML=String(main).trim().split(/\s+/).map(w=>'<span class="w">'+esc(w)+'</span>').join(" ");wordEls=cs.children;paintWords.k=-2;}
   else cs.textContent=main;
   const el=$("lCur");el.className="lCur "+cls+(wordEls?" words":"")+(String(main).length>30?" long":"");
   if(changedMain&&cls===""){void el.offsetWidth;el.classList.add("anim");}
@@ -3063,6 +3214,7 @@ function paintWords(ln,rel,span){
   let fr=0;if(k>=0){const nx=k+1<n?st[k+1]:(end!=null?end:st[k]+.6),d=Math.max(.12,(nx-st[k])*.85);fr=clamp((rel-st[k])/d,0,1);}
   const key=k+":"+Math.round(fr*20);if(key===wordState)return;wordState=key;
   for(let i=0;i<n;i++)wordEls[i].style.setProperty("--p",i<k?"100%":i===k?(fr*100).toFixed(0)+"%":"0%");
+  if(k!==paintWords.k){paintWords.k=k;for(let i=0;i<n;i++){wordEls[i].classList.toggle("sung",i<=k);wordEls[i].classList.toggle("now",i===k);}}
 }
 function updLyrics(t,force){
   if(force)lastLyrKey="";
@@ -4224,10 +4376,27 @@ requestAnimationFrame(frame);
   function size(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);
     const n=Math.round(Math.min(55,Math.max(24,W*H/14000)));while(P.length<n)P.push(mk(true));P.length=n;}
   function mk(any){const z=.25+Math.random()*.75;return{x:Math.random()*W,y:any?Math.random()*H:H+8,z,vx:(Math.random()-.5)*.1,vy:-(.05+Math.random()*.16)*z,s:.5+z*1.4,a:.08+z*.25,ph:Math.random()*6.28};}
-  function dust(){
-    cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,W,H);if(!fxOn)return;
+  /* ── musiken styr hela gränssnittet: --bass --drum --inst --voc --beat (0–1) ── */
+  const BS=document.body.style,lastV={};
+  function pub(k,v){if(Math.abs((lastV[k]??-1)-v)>.025){lastV[k]=v;BS.setProperty("--"+k,v.toFixed(3));}}
+  const LVk={};LV.forEach(l=>LVk[l.k]=l);
+  const lv=k=>LVk[k]?LVk[k].v:0;
+  let beatT=0,beats=0;
+  function energy(){
     let e=0;if(typeof vizAn!=="undefined"&&vizAn&&playing){for(let i=1;i<9;i++)e+=vizData[i];e/=8*255;}
-    slow+=(e-slow)*.04;pulse=Math.max(pulse*.9,Math.max(0,e-slow-.04)*7);const boost=1+pulse*4,glow=Math.min(1,pulse);
+    slow+=(e-slow)*.04;const kick=Math.max(0,e-slow-.04)*7;
+    if(kick>.5&&performance.now()-beatT>260){beatT=performance.now();beats++;document.body.classList.toggle("beatB",beats&1);}
+    pulse=Math.max(pulse*.9,kick);
+    pub("bass",lv("bass"));pub("drum",lv("drum"));pub("inst",lv("inst"));pub("voc",lv("voc"));pub("beat",Math.min(1,pulse));
+    return e;
+  }
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  const elR=sel=>{const e=document.querySelector(sel);if(!e)return null;const r=e.getBoundingClientRect();return r.width?r:null;};
+  let scrR=null,rT=0;
+  /* ── scener per tema, ritas bakom gränssnittet ── */
+  const S={};let sp=[];let lastScene="";
+  function dustScene(t){
+    const boost=1+pulse*4,glow=Math.min(1,pulse);
     for(const q of P){
       if(!RM){q.ph+=.01;q.x+=q.vx+Math.sin(q.ph)*.07*q.z;q.y+=q.vy*boost;}
       if(q.y<-8||q.x<-8||q.x>W+8)Object.assign(q,mk(false),{x:Math.random()*W});
@@ -4235,7 +4404,134 @@ requestAnimationFrame(frame);
       cx.fillStyle="rgba("+TH.dust+","+Math.min(.8,q.a*light*(1+glow*1.3))+")";cx.beginPath();cx.arc(q.x,q.y,q.s,0,6.2832);cx.fill();
     }
   }
-  function loop(ts){if(!document.hidden){reels(ts);levers();dust();}requestAnimationFrame(loop);}
+  /* Jukebox: bubblor i rören längs bågen, regnbågsljus som jagar runt */
+  S.jukebox=t=>{
+    const r=scrR;if(!r)return;
+    if(!sp.length)for(let i=0;i<28;i++)sp.push({s:i&1,y:rnd(r.top,r.bottom),z:rnd(2,6),v:rnd(.4,1.2)});
+    const hue=(t/40)%360;
+    for(const side of [0,1]){
+      const x=side?r.right-9:r.left+9;
+      const g=cx.createLinearGradient(0,r.top,0,r.bottom);
+      for(let k=0;k<=6;k++)g.addColorStop(k/6,"hsla("+((hue+k*50+side*180)%360)+",95%,60%,"+(.35+pulse*.5)+")");
+      cx.fillStyle=g;cx.fillRect(x-7,r.top+30,14,r.height-30);
+    }
+    cx.fillStyle="rgba(255,255,255,.75)";
+    for(const b of sp){b.y-=b.v*(1+lv("bass")*3)*(playing?1:.3);if(b.y<r.top+34)b.y=r.bottom;
+      const x=(b.s?r.right-9:r.left+9)+Math.sin(b.y/9)*2;cx.beginPath();cx.arc(x,b.y,b.z*.5+lv("drum")*1.5,0,6.2832);cx.fill();}
+    const cxp=r.left+r.width/2,rr=r.width*.62+pulse*20;
+    const rg=cx.createRadialGradient(cxp,r.top+r.width*.45,10,cxp,r.top+r.width*.45,rr);
+    rg.addColorStop(0,"hsla("+hue+",100%,65%,"+(.10+pulse*.25)+")");rg.addColorStop(1,"hsla("+hue+",100%,65%,0)");
+    cx.fillStyle=rg;cx.fillRect(0,0,W,H);
+  };
+  /* Freestyle: solstrålar som snurrar i takt med basen + flygande ljudvågor */
+  let rayA=0;
+  S.freestyle=t=>{
+    rayA+=.002+lv("bass")*.02;const ox=W/2,oy=H*.22,N=18,R=Math.hypot(W,H);
+    for(let i=0;i<N;i++){const a=rayA+i*6.2832/N;cx.fillStyle=i&1?"rgba(255,140,40,"+(.08+pulse*.12)+")":"rgba(255,214,60,"+(.06+pulse*.1)+")";
+      cx.beginPath();cx.moveTo(ox,oy);cx.lineTo(ox+Math.cos(a)*R,oy+Math.sin(a)*R);cx.lineTo(ox+Math.cos(a+6.2832/N)*R,oy+Math.sin(a+6.2832/N)*R);cx.fill();}
+    if(typeof vizData!=="undefined"&&vizData){cx.strokeStyle="rgba(255,90,30,.35)";cx.lineWidth=3;cx.beginPath();
+      for(let i=0;i<=40;i++){const v=(vizData[1+i]||0)/255;const x=i/40*W,y=H-30-v*90*(playing?1:0)-Math.sin(t/300+i/3)*6;i?cx.lineTo(x,y):cx.moveTo(x,y);}cx.stroke();}
+  };
+  /* Synthwave: rutnätsgolv som rusar mot dig, stjärnor, berg */
+  let gz=0;const ST=[];
+  S.synthwave=t=>{
+    if(!ST.length)for(let i=0;i<70;i++)ST.push({x:Math.random(),y:Math.random()*.55,s:rnd(.4,1.6),p:rnd(0,6)});
+    for(const s of ST){s.p+=.04;cx.fillStyle="rgba(255,255,255,"+(.3+Math.sin(s.p)*.3+pulse*.3)+")";cx.fillRect(s.x*W,s.y*H,s.s,s.s);}
+    const hz=H*.62,sr=105*(1+lv("bass")*.12+pulse*.06),sy=hz-sr*.35;
+    const sg=cx.createLinearGradient(0,sy-sr,0,sy+sr);sg.addColorStop(0,"#ffe46b");sg.addColorStop(.5,"#ff7a8a");sg.addColorStop(1,"#ff2fb5");
+    cx.save();cx.shadowColor="#ff3fd0";cx.shadowBlur=40+pulse*40;cx.fillStyle=sg;cx.beginPath();cx.arc(W/2,sy,sr,0,6.2832);cx.fill();cx.restore();
+    cx.fillStyle="#0b0420";for(let i=0;i<7;i++){const y=sy+sr*(.1+i*.14)+((t/60)%(sr*.14));cx.fillRect(W/2-sr,y,sr*2,2+i*1.3);}
+    cx.fillStyle="#1a0638";cx.beginPath();cx.moveTo(0,hz);
+    for(let i=0;i<=12;i++){const x=i/12*W,y=hz-(i%3===1?60:i%2?28:42)*(1+lv("inst")*.3);cx.lineTo(x,y);}cx.lineTo(W,hz);cx.fill();
+    const fl=cx.createLinearGradient(0,hz,0,H);fl.addColorStop(0,"#2a0845");fl.addColorStop(1,"#0b0420");cx.fillStyle=fl;cx.fillRect(0,hz,W,H-hz);
+    gz=(gz+(playing?.012+lv("bass")*.05:.003))%1;
+    cx.strokeStyle="rgba(255,63,208,"+(.55+pulse*.4)+")";cx.lineWidth=1.4;cx.shadowColor="#ff3fd0";cx.shadowBlur=8;
+    for(let i=0;i<14;i++){const z=(i+gz)/14,y=hz+(H-hz)*z*z;cx.beginPath();cx.moveTo(0,y);cx.lineTo(W,y);cx.stroke();}
+    cx.strokeStyle="rgba(63,246,255,.5)";
+    for(let i=-12;i<=12;i++){cx.beginPath();cx.moveTo(W/2+i*12,hz);cx.lineTo(W/2+i*W*.16,H);cx.stroke();}
+    cx.shadowBlur=0;
+  };
+  /* Fickstudio: oscilloskop — tre lysande vågor för bas, musik och sång */
+  const osc=new Float32Array(256);
+  S.fickstudio=t=>{
+    const r=scrR;if(!r)return;
+    cx.save();cx.beginPath();cx.rect(r.left,r.top,r.width,r.height);cx.clip();
+    cx.fillStyle="#0c0c0c";cx.fillRect(r.left,r.top,r.width,r.height);
+    const cols=[["bass","rgba(255,98,0,"],["inst","rgba(60,150,255,"],["voc","rgba(240,240,240,"]];
+    cx.shadowBlur=8;
+    cols.forEach(([k,c],j)=>{const l=LVk[k];const y0=r.top+r.height*(.25+j*.25);cx.strokeStyle=c+".38)";cx.shadowColor=c+"1)";cx.lineWidth=1.6;cx.beginPath();
+      if(l&&l.an&&playing){l.an.getFloatTimeDomainData(osc);const g=r.height*.09/Math.max(.02,l.pk);for(let i=0;i<256;i++){const x=r.left+i/255*r.width,y=y0+Math.max(-1,Math.min(1,osc[i]*g/30))*r.height*.11;i?cx.lineTo(x,y):cx.moveTo(x,y);}}
+      else{for(let i=0;i<=60;i++){const x=r.left+i/60*r.width,y=y0+Math.sin(t/700+i/5+j)*3;i?cx.lineTo(x,y):cx.moveTo(x,y);}}
+      cx.stroke();});
+    cx.restore();
+  };
+  /* Mixtape: pappersbitar och konfetti som kastas upp på varje slag */
+  S.mixtape=t=>{
+    const C=["#ff4d2e","#2d3cff","#ffb23f","#141414","#3fbf7f"];
+    if(sp.length<40)sp.push({x:rnd(0,W),y:rnd(-H,0),r:rnd(0,6),vr:rnd(-.05,.05),vy:rnd(.3,1),vx:rnd(-.3,.3),w:rnd(4,12),h:rnd(3,7),c:C[sp.length%5]});
+    for(const q of sp){if(pulse>.6&&q.y>H*.4){q.vy=-rnd(2,5);}q.vy=Math.min(q.vy+.04,1.2);q.y+=q.vy;q.x+=q.vx;q.r+=q.vr*(1+pulse*4);
+      if(q.y>H+10){q.y=-10;q.x=rnd(0,W);}cx.save();cx.translate(q.x,q.y);cx.rotate(q.r);cx.globalAlpha=.55;cx.fillStyle=q.c;cx.fillRect(-q.w/2,-q.h/2,q.w,q.h*Math.abs(Math.cos(q.r*2)));cx.restore();}
+    cx.globalAlpha=1;
+  };
+  /* Mixerbord: bakgrundsspektrum som LED-staplar */
+  S.mixerbord=t=>{
+    if(typeof vizData==="undefined"||!vizData)return;const N=24,w=W/N;
+    for(let i=0;i<N;i++){const v=playing?(vizData[1+i*2]||0)/255:.05;const n=Math.round(v*18);
+      for(let k=0;k<n;k++){cx.fillStyle=k>14?"rgba(255,70,40,.22)":k>10?"rgba(255,200,60,.18)":"rgba(80,255,120,.13)";cx.fillRect(i*w+2,H*.62-k*9,w-4,6);}}
+  };
+  /* Material Lila: mjuka färgklumpar som andas med basen */
+  const BL=[];
+  function blobs(cols,n){
+    if(BL.length!==n){BL.length=0;for(let i=0;i<n;i++)BL.push({x:Math.random()*W,y:Math.random()*H,vx:rnd(-.3,.3),vy:rnd(-.3,.3),r:rnd(90,170),c:cols[i%cols.length],k:["bass","inst","voc","drum"][i%4]});}
+    cx.globalCompositeOperation="source-over";
+    for(const b of BL){b.x+=b.vx*(1+pulse*3);b.y+=b.vy*(1+pulse*3);if(b.x<-60||b.x>W+60)b.vx*=-1;if(b.y<-60||b.y>H+60)b.vy*=-1;
+      const r=b.r*(1+lv(b.k)*.35);const g=cx.createRadialGradient(b.x,b.y,0,b.x,b.y,r);g.addColorStop(0,b.c);g.addColorStop(1,"rgba(0,0,0,0)");cx.fillStyle=g;cx.beginPath();cx.arc(b.x,b.y,r,0,6.2832);cx.fill();}
+  }
+  S["m3-lila"]=()=>blobs(["rgba(208,188,255,.55)","rgba(255,216,228,.6)","rgba(127,103,190,.35)","rgba(200,230,255,.45)"],5);
+  /* Material Korall: ringar som sprider sig på varje slag */
+  const RG=[];let lastBeat=0;
+  S["m3-korall"]=t=>{
+    if(beats!==lastBeat){lastBeat=beats;RG.push({r:30,a:.5,x:W/2,y:H*.45});}
+    for(let i=RG.length-1;i>=0;i--){const g=RG[i];g.r+=4+g.r*.02;g.a*=.965;if(g.a<.02){RG.splice(i,1);continue;}
+      cx.strokeStyle="rgba(255,140,110,"+g.a+")";cx.lineWidth=3;cx.beginPath();cx.arc(g.x,g.y,g.r,0,6.2832);cx.stroke();}
+    const v=lv("voc");const g=cx.createRadialGradient(W/2,H*.45,0,W/2,H*.45,W*.7);g.addColorStop(0,"rgba(255,120,90,"+(.08+v*.2)+")");g.addColorStop(1,"rgba(255,120,90,0)");cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  };
+  /* Material Grön: ljusa bubblor som stiger, fler när musiken är stark */
+  S["m3-gron"]=t=>{
+    if(sp.length<26)sp.push({x:rnd(0,W),y:H+rnd(0,H),r:rnd(6,26),v:rnd(.2,.7)});
+    for(const b of sp){b.y-=b.v*(1+lv("inst")*3);if(b.y<-30){b.y=H+30;b.x=rnd(0,W);}
+      cx.fillStyle="rgba(56,106,32,"+(.06+lv("voc")*.08)+")";cx.beginPath();cx.arc(b.x+Math.sin(b.y/40)*8,b.y,b.r,0,6.2832);cx.fill();}
+  };
+  /* Material Svart: stjärnfärd — fart efter musiken */
+  S["m3-amoled"]=t=>{
+    if(sp.length<120)for(let i=0;i<120;i++)sp.push({a:rnd(0,6.28),d:rnd(0,1),z:rnd(.3,1)});
+    const ox=W/2,oy=H*.3,sp2=(playing?.004:.0008)+lv("bass")*.02+pulse*.02;
+    for(const s of sp){const d0=s.d;s.d+=sp2*s.z*(.4+s.d*2);if(s.d>1.2){s.d=0;s.a=rnd(0,6.28);}
+      const R=Math.max(W,H)*.9;cx.strokeStyle="rgba(170,199,255,"+Math.min(.8,s.d)+")";cx.lineWidth=s.z*1.6;cx.beginPath();
+      cx.moveTo(ox+Math.cos(s.a)*d0*d0*R,oy+Math.sin(s.a)*d0*d0*R);cx.lineTo(ox+Math.cos(s.a)*s.d*s.d*R+.1,oy+Math.sin(s.a)*s.d*s.d*R);cx.stroke();}
+  };
+  /* Material Rosa: former som svävar, snurrar och hoppar på slagen */
+  S["m3-rosa"]=t=>{
+    const C=["#ffb1c1","#ffdcbd","#c9b6ff","#ffd9df","#b8ecd2"];
+    if(sp.length<12)sp.push({x:rnd(0,W),y:rnd(0,H),s:rnd(18,44),r:rnd(0,6),vr:rnd(-.01,.01),vy:rnd(-.25,-.08),k:sp.length%3,c:C[sp.length%5],j:0});
+    for(const q of sp){q.y+=q.vy;q.r+=q.vr*(1+pulse*6);q.j=Math.max(q.j*.85,pulse);if(q.y<-60){q.y=H+60;q.x=rnd(0,W);}
+      const s=q.s*(1+q.j*.3);cx.save();cx.translate(q.x,q.y-q.j*14);cx.rotate(q.r);cx.globalAlpha=.7;cx.fillStyle=q.c;cx.beginPath();
+      if(q.k===0){for(let i=0;i<10;i++){const a=i*.6283,rr=i&1?s*.5:s;cx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}}
+      else if(q.k===1){cx.roundRect(-s*.7,-s*.7,s*1.4,s*1.4,s*.45);}
+      else{cx.moveTo(0,-s);cx.lineTo(s*.9,s*.7);cx.lineTo(-s*.9,s*.7);}
+      cx.fill();cx.restore();}
+    cx.globalAlpha=1;
+  };
+  function dust(ts){
+    cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,W,H);
+    energy();
+    if(!fxOn||RM)return;
+    const th=document.documentElement.dataset.theme||"";
+    if(th!==lastScene){lastScene=th;sp=[];BL.length=0;RG.length=0;}
+    if(ts-rT>400){rT=ts;scrR=elR(".screen");}
+    (S[th]||dustScene)(ts);
+  }
+  function loop(ts){if(!document.hidden){reels(ts);levers();dust(ts);}requestAnimationFrame(loop);}
   addEventListener("resize",size);size();requestAnimationFrame(loop);
   const sw=$("swFx");sw.classList.toggle("on",fxOn);
   sw.onclick=()=>{fxOn=!fxOn;LS.set("ks_fx",fxOn);sw.classList.toggle("on",fxOn);};
