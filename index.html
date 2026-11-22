@@ -564,6 +564,10 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:4px;height
 }
 .st{white-space:nowrap}
 @media (max-width:430px){.model{display:none}.st{padding:0 8px 0 6px;font-size:10.5px}.steps{gap:4px}}
+.tapbar .tapUndo{width:40px;height:40px;border-radius:20px;background:var(--md-sc4);color:var(--md-on);font-size:18px}
+.instrTgl{margin:-4px 0 6px}
+#sh-text .instrTgl{margin:8px 0 0;border-bottom:none;border-top:1px solid var(--md-outV);padding-top:12px}
+body:has(#tapbar:not([hidden])) #toast{bottom:calc(env(safe-area-inset-bottom,0px) + 250px)}
 </style>
 </head>
 <body>
@@ -741,6 +745,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:4px;height
     <div class="blk">
       <div class="bh">Texten just nu</div>
       <div class="status" id="lyrSt" style="margin-top:0"></div>
+      <div class="tgl instrTgl"><div class="tx"><b>Låten har ingen sång</b><small>För instrumentaler, t.ex. från Suno. Ingen väntan på AI — du trycker texten i takt själv</small></div><div class="sw swInstr" id="swInstr2"></div></div>
       <div class="bh" style="margin:14px 0 8px">Språk i låten</div>
       <div class="chips" id="langChips" style="margin:0">
         <button class="chip" data-v="auto">Auto</button>
@@ -827,6 +832,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:4px;height
     </div>
     <div class="blk">
       <div class="bh">Sångborttagning</div>
+      <div class="tgl instrTgl"><div class="tx"><b>Låten har ingen sång</b><small>För instrumentaler, t.ex. från Suno. Ingen väntan på AI — du trycker texten i takt själv</small></div><div class="sw swInstr" id="swInstr"></div></div>
       <div class="chips" id="sepChips">
         <button class="chip" data-v="ai">AI (bäst)</button>
         <button class="chip" data-v="max">Snabb</button>
@@ -896,6 +902,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:4px;height
 
 <div class="tapbar" id="tapbar" hidden>
   <div style="flex:1;min-width:0"><div class="tt">Tap-synk</div><div class="tl" id="tapLine"></div><div class="tc" id="tapCount"></div></div>
+  <button class="iconBtn tapUndo" id="bTapUndo" title="Ångra senaste tryck">↶</button>
   <button class="tapBig" id="bTap">TAP</button>
   <button class="iconBtn" id="bTapX" title="Stäng"><svg class="ic"><use href="#icX"/></svg></button>
 </div>
@@ -1987,6 +1994,7 @@ async function addFiles(files){
     const nm=parseName(f.name);
     const rec={id,name:f.name,title:tags.title||nm.title||f.name,artist:tags.artist||nm.artist||"",dur:0,added:Date.now()+n,
       hasStems:false,mono:false,ana:null,lyrics:[],lyrOffset:0,lyrState:"none",lyrInfo:"",lang:"",segs:null,segsLang:"",aiSecs:0,aiHow:"",lrcTried:false,syncTried:false,err:""};
+    if(/instrument|\binstr\b|karaoke|no ?vocals?|backing ?track|utan sång/i.test(f.name+" "+(tags.title||"")))rec.instr=true;
     if(tags.lyrics){
       if(/\[\d+:\d+/.test(tags.lyrics)){const l=parseLRC(tags.lyrics);if(l.length){rec.lyrics=l;rec.lyrState="synced";rec.lyrInfo="Synkad text ur filen";}}
       if(!rec.lyrics.length){const l=plainLines(tags.lyrics);if(l.length){rec.lyrics=l.map((t,i)=>({t,s:i}));rec.lyrState="rough";}}
@@ -2695,7 +2703,7 @@ function installStems(iL,iR,vL,vR){
   renderCache=null;switchVersion(baseVersion());if(paramsKey()!=="0|1.00")applyVersion();
 }
 async function startAI(){
-  if(!buf||!cur||!analyzed||!stereo||ai.state==="run")return false;
+  if(!buf||!cur||!analyzed||!stereo||ai.state==="run"||cur.instr)return false;
   const rec=cur,myGen=gen,mySong=songId;let lastTier=null;
   bgCancel();
   ai=AI0();ai.state="run";jobShow(0,"🧠 Hämtar AI-modellen…","30 MB — bara första gången",true);aiStatus();renderLib();
@@ -2800,7 +2808,9 @@ function syncRun(audio,sr,lines,segs,h){
 let syncBusy=false;
 function lyrStatus(){
   const rec=cur,e=$("lyrSt");
+  document.querySelectorAll(".swInstr").forEach(x=>x.classList.toggle("on",!!(rec&&rec.instr)));
   if(!rec||!buf){e.className="status";e.textContent="Ingen låt öppen.";return;}
+  if(rec.instr&&lyrics.length&&rec.lyrState==="rough"){e.className="status";e.innerHTML="Låten har ingen sång, så AI:n kan inte höra var raderna ska ligga. Tryck <b>Tap-synk</b> under Finjustera, spela och tryck när varje rad ska börja.";return;}
   if(syncBusy){e.className="status";e.innerHTML='<span class="spn"></span>AI lyssnar på sången och lägger texten i takt…';return;}
   if(!lyrics.length){e.className="status";e.textContent="Ingen text än. Klistra in den nedan.";return;}
   if(rec.lyrState==="rough"){
@@ -2811,6 +2821,28 @@ function lyrStatus(){
   }
   e.className="status ok";e.textContent="✓ "+lyrics.length+" rader i takt"+(rec.lyrInfo?" — "+rec.lyrInfo:"");
 }
+/* ── instrumental: hela låten är musiken direkt, ingen sång att ta bort och ingen väntan ── */
+function useInstr(rec){
+  if(!rec||rec!==cur||!buf)return;
+  if(early){early.dead=true;early=null;}
+  if(ai.state==="run")cancelFg();
+  if(stereo&&analyzed&&!(ai.how==="redan instrumental")){
+    const n=base.orig.L.length,z=new Float32Array(n);
+    installStems(base.orig.L.slice(),base.orig.R.slice(),z,new Float32Array(n));
+  }
+  ai=AI0();ai.state="done";ai.how="redan instrumental";ai.front=1;jobHide();
+  rec.aiHow=ai.how;rec.aiSecs=0;saveRec(rec);aiStatus();updateAll();renderLib();
+}
+function setInstr(on){
+  const rec=cur;if(!rec||!buf){toast("Öppna en låt först","e");return;}
+  if(!!rec.instr===on)return;
+  rec.instr=on;saveRec(rec);
+  if(on){useInstr(rec);toast("Instrumental — ingen väntan på AI","s");
+    if(lyrics.length&&rec.lyrState!=="synced")setTimeout(startTapSync,600);}
+  else{const id=rec.id;hardReset();cur=null;openSong(id);toast("AI:n tar bort sången igen","s");}
+  lyrStatus();
+}
+document.querySelectorAll(".swInstr").forEach(x=>x.onclick=()=>setInstr(!(cur&&cur.instr)));
 /* lägger den öppna låtens text i takt med sången */
 /* ── text i takt medan sången tas bort: när grafikkortet tar bort sången är processorn ledig, så AI:n
    som lyssnar börjar på de delar som redan är klara. När sången är borta återstår bara sista biten. */
@@ -2844,7 +2876,7 @@ function earlyTick(rec){
   }).catch(e=>{console.warn("tidig lyssning",e);E.dead=true;E.busy=false;});
 }
 async function syncText(force){
-  const rec=cur;if(!rec||!buf||syncBusy)return false;
+  const rec=cur;if(!rec||!buf||syncBusy||rec.instr)return false;
   if(early&&early.rec===rec&&!early.dead&&!early.done){    /* gör klart den tidiga lyssningen först */
     jobShow(90,"🎧 AI lyssnar klart…","",true);
     for(let i=0;i<600&&early&&!early.done&&!early.dead;i++){if(!early.busy)earlyTick(rec);await new Promise(r=>setTimeout(r,500));}
@@ -2939,6 +2971,7 @@ async function runPipeline(forceAI){
   const rec=cur,mySong=songId;
   if(!analyzed){if(preparing)return;if(!(await prepare())||mySong!==songId)return;}
   if(rec.lyrState==="none"&&!rec.lrcTried&&!lyrics.length){rec.lrcTried=true;saveRec(rec);fetchLyrics(true);}
+  if(rec.instr){useInstr(rec);lyrStatus();return;}
   if(stereo&&sepMode==="ai"&&ai.state!=="done"&&(ai.state!=="fail"||forceAI)){
     if(ai.state==="run")return;
     await startAI();if(mySong!==songId)return;
@@ -2968,7 +3001,7 @@ function kick(){
 let bg={run:false,id:null,cancel:null,p:0,label:""},bgWifi=false;
 function bgCancel(){if(bg.run&&bg.cancel){const c=bg.cancel;bg.cancel=null;c();}}
 const fgBusy=()=>preparing||ai.state==="run"||syncBusy||!!fg;
-const bgNeeds=r=>r!==cur&&!r.mono&&!r.err&&(!r.hasStems||(r.lyrState==="rough"&&r.lyrics.length&&!r.syncTried));
+const bgNeeds=r=>r!==cur&&!r.mono&&!r.err&&!r.instr&&(!r.hasStems||(r.lyrState==="rough"&&r.lyrics.length&&!r.syncTried));
 let _libT=0;
 async function pump(){
   if(!bgOn||bg.run||fgBusy()||sepMode!=="ai")return;
@@ -3117,6 +3150,7 @@ function useText(tx,src){
   const lines=plainLines(tx);if(!lines.length){toast("Ingen text att använda","e");return false;}
   lyrics=spreadLines(lines);lyrOffset=0;cur.lyrState="rough";cur.lyrInfo="";cur.syncTried=false;
   lyricsChanged();
+  if(cur.instr){toast(lines.length+" rader — spela och tryck TAP när varje rad ska börja","s");setTimeout(()=>startTapSync(true),500);lyrStatus();return true;}
   const ready=analyzed&&(!stereo||sepMode!=="ai"||ai.state==="done"||ai.state==="fail");
   toast(lines.length+" rader — "+(ready?"AI lägger dem i takt nu…":"läggs i takt när sången är bortplockad"),"s");
   kick();return true;
@@ -3193,20 +3227,28 @@ $("bSaveLrc").onclick=()=>{
   dl(new Blob([o],{type:"text/plain"}),($("inTitle").value||"karaoke")+".lrc");
 };
 $("bClr").onclick=()=>{if(!lyrics.length)return;if(confirm("Radera all text för den här låten?")){lyrics=[];lyrOffset=0;if(cur){cur.lyrState="none";cur.lyrInfo="";cur.syncTried=false;}lyricsChanged();}};
-$("bTapMode").onclick=()=>{
+let tapHist=[];
+function startTapSync(fromStart){
   if(!buf){toast("Öppna en låt först","e");return;}
   if(!lyrSorted.length){toast("Lägg till text först","e");return;}
-  closeSheet();tapMode=true;markManual();lastLyrKey="";
-  const t=curT()-lyrOffset;tapIdx=lyrSorted.findIndex(x=>x.s>=t);if(tapIdx<0)tapIdx=0;
+  closeSheet();tapMode=true;tapHist=[];markManual();if(cur&&cur.instr)cur.lyrInfo="tryckt i takt";lastLyrKey="";
+  if(fromStart){lyrOffset=0;tapIdx=0;lyrSorted.forEach(l=>{delete l.w;delete l.e;});startAt(0);}
+  else{const t=curT()-lyrOffset;tapIdx=lyrSorted.findIndex(x=>x.s>=t);if(tapIdx<0)tapIdx=0;if(!playing)startAt(pos);}
   $("tapbar").hidden=false;updTap();
-  if(!playing)startAt(pos);
-};
-$("bTap").onclick=()=>{
+}
+$("bTapMode").onclick=()=>startTapSync(!!(cur&&cur.instr&&cur.lyrInfo!=="tryckt i takt"));
+$("bTapUndo").onclick=()=>{if(!tapMode||!tapIdx)return;tapIdx--;const h=tapHist.pop();if(h)lyrSorted[tapIdx].s=h;lyricsChanged();updTap();seek(Math.max(0,lyrSorted[tapIdx].s+lyrOffset-3));};
+$("bTap").addEventListener("pointerdown",e=>{
+  e.preventDefault();
   if(!tapMode||tapIdx>=lyrSorted.length)return;
-  const ln=lyrSorted[tapIdx];ln.s=Math.max(0,curT()-lyrOffset);tapIdx++;
+  const lag=Math.max(0,(performance.now()-(e.timeStamp||performance.now()))/1000)*(ver?ver.T:1);
+  const ln=lyrSorted[tapIdx];tapHist.push(ln.s);ln.s=+Math.max(0,curT()-lag-lyrOffset).toFixed(2);delete ln.w;delete ln.e;
+  /* raderna efter flyttas med, så att de inte hamnar före den du just tryckte */
+  for(let k=tapIdx+1;k<lyrSorted.length;k++)if(lyrSorted[k].s<=ln.s)lyrSorted[k].s=+(ln.s+.5*(k-tapIdx)).toFixed(2);
+  tapIdx++;
   lyricsChanged();
-  if(tapIdx>=lyrSorted.length){tapMode=false;$("tapbar").hidden=true;toast("Synkningen klar ✓","s");}else updTap();
-};
+  if(tapIdx>=lyrSorted.length){tapMode=false;$("tapbar").hidden=true;toast("Klart — texten ligger där du tryckte ✓","s");lyrStatus();}else updTap();
+});
 $("bTapX").onclick=()=>{tapMode=false;$("tapbar").hidden=true;};
 function updTap(){$("tapLine").textContent=lyrSorted[tapIdx]?lyrSorted[tapIdx].t:"";$("tapCount").textContent="Rad "+(tapIdx+1)+" av "+lyrSorted.length;}
 $("inTitle").addEventListener("change",()=>{if(cur){cur.title=$("inTitle").value.trim()||cur.name;$("songT").textContent=cur.title;saveRec(cur);setMediaSession();renderLib();}});
