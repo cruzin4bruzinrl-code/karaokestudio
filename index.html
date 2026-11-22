@@ -825,6 +825,341 @@ body:has(#tapbar:not([hidden])) #toast{bottom:calc(env(safe-area-inset-bottom,0p
 [data-theme="ritning"] body.playing .transport .tb.play,[data-theme="mixtape"] body.playing .transport .tb.play{border-radius:10px}
 [data-theme="mixtape"] body.playing .transport .tb.play{border-radius:50%}
 [data-theme="jukebox"] .screen{padding:34px 30px 8px}
+
+
+/* ═════════ Upplägg per tema ═════════
+   Kassettdäcken (Bandspelare, Aluminium, Ritning) behåller bandspelaren.
+   Övriga teman plockar isär bandspelaren och ställer upp delarna på helt egna sätt. */
+:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],
+    [data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-turkos"],[data-theme="m3-rosa"]){--flat:1}
+:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],
+    [data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) :is(.deck,.deckTop,.ctlRow){display:contents}
+:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],
+    [data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .app{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));align-content:stretch;gap:10px 8px}
+:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],
+    [data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) :is(.door,.tapeStrip,.transport,.dock,.modeLbl){margin:0}
+:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],[data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .top{grid-area:top}:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],[data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .screen{grid-area:scr}:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],[data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .levers{grid-area:lev}:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],[data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .counter{grid-area:cnt}:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],[data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .door{grid-area:door}:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],[data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .tapeStrip{grid-area:wave}
+:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],[data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .transport{grid-area:tr}:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],[data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .modeWrap{grid-area:md}:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],[data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .kBox:has(#kSemi){grid-area:ks}:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],[data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .kBox:has(#kTempo){grid-area:kt}:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],[data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .dock{grid-area:dock}:is([data-theme="jukebox"],[data-theme="freestyle"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="mixerbord"],[data-theme="m3-lila"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .shelf{grid-area:shelf}
+
+/* luckan som bara visar förloppet (för upplägg utan synlig kassett) */
+.door.slim{}
+:is([data-theme="jukebox"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixerbord"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .door{height:auto;background:none;box-shadow:none;overflow:visible}
+:is([data-theme="jukebox"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixerbord"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .door>:is(.doorGlass,.doorEmpty,.cass){display:none}
+:is([data-theme="jukebox"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixerbord"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .door .prog{position:static}
+:is([data-theme="jukebox"],[data-theme="synthwave"],[data-theme="fickstudio"],[data-theme="mixerbord"],[data-theme="m3-korall"],[data-theme="m3-gron"],[data-theme="m3-amoled"],[data-theme="m3-rosa"]) .door:not(:has(#jobCard:not([hidden]))){display:none}
+
+/* hyllan som lista */
+.shelf.list,[data-shelf="list"] .shelf{}
+:is([data-theme="freestyle"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="m3-gron"]) .shelfRow{flex-direction:column;overflow-x:hidden;overflow-y:auto;touch-action:pan-y;scroll-snap-type:y proximity;padding:2px 10px 4px;gap:6px;counter-reset:nr}
+:is([data-theme="freestyle"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="m3-gron"]) .cass.mini{width:auto;height:auto;padding:0;border:none;box-shadow:none;background:none;touch-action:pan-y;counter-increment:nr}
+:is([data-theme="freestyle"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="m3-gron"]) .cass.mini .cWin{display:none}
+:is([data-theme="freestyle"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="m3-gron"]) .cass.mini .cLbl{height:auto;min-height:38px;padding:6px 10px;flex-wrap:nowrap;background-image:none;border-radius:8px}
+:is([data-theme="freestyle"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="m3-gron"]) .cass.mini .st2{width:auto;padding:0;margin:0 0 0 auto;flex:none}
+:is([data-theme="freestyle"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="m3-gron"]) .cass.mini .cSide{font-size:0}
+:is([data-theme="freestyle"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="m3-gron"]) .cass.mini .cSide::after{content:counter(nr);font-size:10px}
+:is([data-theme="freestyle"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="m3-gron"]) .cass.blank{width:auto;height:38px;flex-direction:row;gap:6px}
+:is([data-theme="freestyle"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="m3-gron"]) .cass.mini.inPlayer{opacity:1}
+:is([data-theme="freestyle"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="m3-gron"]) .cass.mini.inPlayer>*{visibility:visible}
+:is([data-theme="freestyle"],[data-theme="fickstudio"],[data-theme="mixtape"],[data-theme="m3-gron"]) .cass.mini.inPlayer::after{display:none}
+.cLbl .ar{display:none}
+
+/* ═════ Jukebox: valvet med texten överst, låtarna som valknappar, runda kromknappar, högtalargaller ═════ */
+[data-theme="jukebox"] .app{grid-template-areas:"top top top top top top" "scr scr scr scr scr scr" "door door door door door door" "shelf shelf shelf shelf shelf shelf" "tr tr tr tr tr tr" "md md md md md md" "ks ks cnt cnt kt kt" "dock dock dock dock dock dock";
+  grid-template-rows:auto minmax(170px,1fr) auto auto auto auto auto auto;padding:12px 14px 10px;background:linear-gradient(90deg,#b21f2d,#e23a44 30%,#e8505a 50%,#c22533 75%,#8e1622);border-radius:0}
+[data-theme="jukebox"] .levers,[data-theme="jukebox"] .tapeStrip{display:none}
+[data-theme="jukebox"] .shelf{background:#fdf6e8;border-radius:12px;padding:8px 6px;box-shadow:inset 0 2px 4px rgba(0,0,0,.2)}
+[data-theme="jukebox"] .shelfHint{display:none}
+[data-theme="jukebox"] .shelfRow{display:grid;grid-template-columns:1fr 1fr;gap:6px;overflow:visible;padding:0 2px;counter-reset:nr}
+[data-theme="jukebox"] .cass.mini,[data-theme="jukebox"] .cass.blank{width:auto;height:34px;padding:0;border:2px solid #c22533;border-radius:4px;background:#fffaf0;box-shadow:none;counter-increment:nr}
+[data-theme="jukebox"] .cass.mini .cWin,[data-theme="jukebox"] .cass.mini .st2{display:none}
+[data-theme="jukebox"] .cass.mini .cLbl{height:30px;background:none;padding:0 6px;gap:6px}
+[data-theme="jukebox"] .cass.mini .cLbl b{font-family:"Archivo";font-size:12px;font-weight:600}
+[data-theme="jukebox"] .cass.mini .cSide{width:auto;padding:0 5px;height:20px;background:#c22533;font-family:"Bebas";font-size:0}
+[data-theme="jukebox"] .cass.mini .cSide::after{content:counter(nr);font-size:15px;font-weight:400}
+[data-theme="jukebox"] .cass.mini.inPlayer{opacity:1;background:#ffe38a}
+[data-theme="jukebox"] .cass.mini.inPlayer>*{visibility:visible}[data-theme="jukebox"] .cass.mini.inPlayer::after{display:none}
+[data-theme="jukebox"] .cass.blank{flex-direction:row;color:#c22533;border-style:dashed}
+[data-theme="jukebox"] .transport{display:flex;justify-content:center;gap:12px}
+[data-theme="jukebox"] .transport .tb{width:50px;flex:none}
+[data-theme="jukebox"] .transport .tb.play{width:66px;height:66px;margin-top:-7px}
+[data-theme="jukebox"] #bBack,[data-theme="jukebox"] #bFwd{display:none}
+[data-theme="jukebox"] .counter{background:transparent;box-shadow:none;align-items:center;text-align:center}
+[data-theme="jukebox"] .cTime{color:#fff;font-size:22px;text-shadow:none}
+[data-theme="jukebox"] .meta span{color:#ffe38a}
+[data-theme="jukebox"] .modes{height:46px}
+[data-theme="jukebox"] .dock{background:repeating-linear-gradient(90deg,#f2f4f6 0 5px,#9aa4ad 5px 8px,#3a0f15 8px 14px);border-radius:12px 12px 30px 30px;padding:6px}
+[data-theme="jukebox"] .dock button{background:rgba(58,15,21,.8);color:#fff}
+[data-theme="jukebox"] .top .steps{display:none}
+[data-theme="jukebox"] .badge{color:#fff;text-shadow:0 2px 0 #8e1622}
+
+/* ═════ Freestyle: kassetten överst, LCD-text, tangenter, vred med banden emellan ═════ */
+[data-theme="freestyle"] .app{grid-template-areas:"top top top top top top" "door door door door door door" "scr scr scr scr scr scr" "tr tr tr tr tr tr" "md md md md md md" "ks shelf shelf shelf shelf kt" "cnt cnt lev lev lev lev" "dock dock dock dock dock dock";
+  grid-template-rows:auto 150px minmax(120px,1fr) auto auto 118px auto auto;padding:14px 16px 10px;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 3px),linear-gradient(160deg,#5d7fa8,#2f4d73 55%,#22385a)}
+[data-theme="freestyle"] .door{height:auto;border-radius:14px}
+[data-theme="freestyle"] .inDeck{top:16px;width:290px}
+[data-theme="freestyle"] .inDeck .cLbl{height:38px}
+[data-theme="freestyle"] .inDeck .cWin{height:64px;margin-top:12px}
+[data-theme="freestyle"] .reel{width:60px;height:60px;margin-top:-30px}
+[data-theme="freestyle"] .tapeStrip{display:none}
+[data-theme="freestyle"] .shelf{background:transparent;padding:0;align-self:stretch}
+[data-theme="freestyle"] .shelfHint{display:none}
+[data-theme="freestyle"] .shelfRow{height:118px;padding:0}
+[data-theme="freestyle"] .cass.mini .cLbl{background:rgba(0,0,0,.25);color:#e8eef5;border-left:4px solid #ff7a2f;border-radius:5px;min-height:30px}
+[data-theme="freestyle"] .cass.mini .cLbl b{font-family:"Space";font-size:12px;font-weight:600}
+[data-theme="freestyle"] .cass.mini .cSide{display:none}
+[data-theme="freestyle"] .cass.mini .st2{color:#9fb4cf}
+[data-theme="freestyle"] .kBox{align-self:center}
+[data-theme="freestyle"] .knob{width:54px;height:54px}
+[data-theme="freestyle"] .counter{background:#a9b98a}
+[data-theme="freestyle"] .levers{height:44px;background:rgba(0,0,0,.25)}
+[data-theme="freestyle"] .lev span{color:#c9d8ea}
+[data-theme="freestyle"] .dock button{color:#e8eef5}
+[data-theme="freestyle"] .top .steps{display:none}
+[data-theme="freestyle"] .badge{color:#fff}
+
+/* ═════ Synthwave: neonrubrik, texten svävar över solen, panel nertill, banden som VHS ═════ */
+[data-theme="synthwave"] body::after{content:"";position:fixed;left:50%;top:30%;width:230px;height:230px;margin-left:-115px;border-radius:50%;z-index:0;pointer-events:none;
+  background:linear-gradient(180deg,#ffe86b,#ff7ab6 55%,#b02aff);filter:drop-shadow(0 0 30px #ff4fb0);
+  -webkit-mask:linear-gradient(#000 0 52%,transparent 52%),repeating-linear-gradient(180deg,#000 0 12px,transparent 12px 17px);-webkit-mask-composite:source-over;mask:linear-gradient(#000 0 52%,transparent 52%),repeating-linear-gradient(180deg,#000 0 12px,transparent 12px 17px)}
+[data-theme="synthwave"] .app{grid-template-areas:"top top top top top top" "scr scr scr scr scr scr" "door door door door door door" "cnt cnt cnt cnt cnt cnt" "wave wave wave wave wave wave" "tr tr tr tr tr tr" "md md md md md md" "ks ks lev lev kt kt" "shelf shelf shelf shelf shelf shelf" "dock dock dock dock dock dock";
+  grid-template-rows:auto minmax(150px,1fr) auto auto auto auto auto auto auto auto;row-gap:8px}
+[data-theme="synthwave"] .top{flex-direction:column;gap:2px}
+[data-theme="synthwave"] .badge{font-size:26px}
+[data-theme="synthwave"] .screen{background:transparent;border:none;box-shadow:none}
+[data-theme="synthwave"] .screen::after{display:none}
+[data-theme="synthwave"] .lCur{font-size:27px}
+[data-theme="synthwave"] .counter{width:auto;background:transparent;box-shadow:none;flex-direction:row;justify-content:space-between}
+[data-theme="synthwave"] .tapeStrip{background:transparent;box-shadow:none;padding:0}
+[data-theme="synthwave"] .transport{display:flex;justify-content:center;gap:10px}
+[data-theme="synthwave"] .transport .tb{width:48px;height:48px;flex:none}
+[data-theme="synthwave"] .transport .tb.play{width:64px;height:64px;margin-top:-8px}
+[data-theme="synthwave"] .tb small{display:none}
+[data-theme="synthwave"] .levers{height:44px;background:transparent;box-shadow:none}
+[data-theme="synthwave"] .shelf{background:rgba(12,4,30,.72);padding:8px 0 4px}
+[data-theme="synthwave"] .shelfHint{display:none}
+[data-theme="synthwave"] .cass.mini{width:92px;height:44px;padding:4px 6px;background:#14031f;border:1px solid #3a1a66;border-radius:4px}
+[data-theme="synthwave"] .cass.mini .cWin{display:none}
+[data-theme="synthwave"] .cass.mini .cLbl{background:none;color:#fff;height:34px;padding:0}
+[data-theme="synthwave"] .cass.mini .cLbl b{font-family:"Bebas";font-size:15px;font-weight:400;letter-spacing:.04em}
+[data-theme="synthwave"] .cass.mini .cSide{display:none}
+[data-theme="synthwave"] .cass.mini .st2{color:#c9a6ff;padding:0}
+[data-theme="synthwave"] .cass.blank{height:44px;width:70px;border-color:#3ff6ff;color:#6ff7ff}
+[data-theme="synthwave"] .dock button{color:#c9a6ff}
+
+/* ═════ Fickstudio: OLED-skärm, färgvred i rad, tangenter, numrerad låtlista ═════ */
+[data-theme="fickstudio"] .app{grid-template-areas:"top top top top top top" "scr scr scr scr scr scr" "door door door door door door" "ks lev lev lev lev kt" "md md md md md md" "tr tr tr tr tr tr" "shelf shelf shelf shelf shelf shelf" "dock dock dock dock dock dock";
+  grid-template-rows:auto minmax(190px,1fr) auto auto auto auto 132px auto;padding:16px 18px 10px;background:#eeece6;border-radius:14px}
+[data-theme="fickstudio"] body{padding:0}
+[data-theme="fickstudio"] .tapeStrip,[data-theme="fickstudio"] .counter{display:none}
+[data-theme="fickstudio"] .levers{height:62px;background:transparent;box-shadow:none;gap:10px}
+[data-theme="fickstudio"] .lev .lt{width:14px;border-radius:7px;background:#ddd9d1}
+[data-theme="fickstudio"] .kBox{align-self:center}
+[data-theme="fickstudio"] .knob{width:54px;height:54px}
+[data-theme="fickstudio"] .shelf{background:transparent;padding:0}
+[data-theme="fickstudio"] .shelfHint{display:none}
+[data-theme="fickstudio"] .shelfRow{padding:0;height:132px}
+[data-theme="fickstudio"] .cass.mini .cLbl{background:#fafafa;color:#1a1a1a;border-radius:5px;min-height:32px}
+[data-theme="fickstudio"] .cass.mini.inPlayer .cLbl{outline:2px solid #ff5a1f}
+[data-theme="fickstudio"] .cass.mini .cLbl b{font-family:"Space";font-size:12px;font-weight:500}
+[data-theme="fickstudio"] .cass.mini .cSide{border-radius:50%;background:#ff5a1f}
+[data-theme="fickstudio"] .cass.mini:nth-child(3n) .cSide{background:#2f7bff}[data-theme="fickstudio"] .cass.mini:nth-child(3n+1) .cSide{background:#7d7d7d}
+[data-theme="fickstudio"] .cass.blank{border-color:#bbb;color:#555}
+[data-theme="fickstudio"] .cass.mini .ar{display:inline;font-size:10px;color:#888;font-family:"Space"}
+[data-theme="fickstudio"] .dock button{color:#1a1a1a}
+[data-theme="fickstudio"] .top .badge{font-size:14px;font-weight:700;text-transform:lowercase}
+
+/* ═════ Mixtape: polaroid och rubrik, textremsa, runda knappar, handskriven lista ═════ */
+[data-theme="mixtape"] .app{grid-template-areas:"door door door top top top" "scr scr scr scr scr scr" "tr tr tr tr tr tr" "md md md md md md" "ks ks cnt cnt kt kt" "shelf shelf shelf shelf shelf shelf" "dock dock dock dock dock dock";
+  grid-template-rows:170px minmax(110px,1fr) auto auto auto 138px auto;padding:14px 16px 10px}
+[data-theme="mixtape"] .door{height:auto;padding:8px 8px 34px;background:#fff;box-shadow:0 6px 14px rgba(0,0,0,.2);transform:rotate(-4deg);border-radius:2px;overflow:hidden}
+[data-theme="mixtape"] .door::after{content:"";position:absolute;left:8px;right:8px;top:8px;bottom:34px;background:linear-gradient(135deg,#ff4d2e,#ffb23f 50%,#2d3cff)}
+[data-theme="mixtape"] .door>.cass{display:none}
+[data-theme="mixtape"] .door>.doorEmpty{display:none}
+[data-theme="mixtape"] .door .prog{z-index:5}
+[data-theme="mixtape"] .top{flex-direction:column;align-items:flex-end;justify-content:center;gap:8px}
+[data-theme="mixtape"] .badge{font-size:29px;line-height:.9;text-align:right;transform:rotate(3deg)}
+[data-theme="mixtape"] .steps{flex-direction:column;align-items:flex-end;gap:4px}
+[data-theme="mixtape"] .st{border:2px solid #2d3cff;color:#2d3cff;background:#fff;border-radius:0}
+[data-theme="mixtape"] .st.on{background:#2d3cff;color:#fff}
+[data-theme="mixtape"] .levers,[data-theme="mixtape"] .tapeStrip{display:none}
+[data-theme="mixtape"] .transport{display:flex;justify-content:space-between;align-items:center}
+[data-theme="mixtape"] .transport .tb{width:50px;height:50px;flex:none}
+[data-theme="mixtape"] .transport .tb.play{width:72px;height:72px}
+[data-theme="mixtape"] .tb small{display:none}
+[data-theme="mixtape"] .counter{background:transparent;box-shadow:none;width:auto;align-items:center}
+[data-theme="mixtape"] .shelf{padding:0}
+[data-theme="mixtape"] .shelfHint{display:none}
+[data-theme="mixtape"] .shelfRow{padding:0 2px;height:138px}
+[data-theme="mixtape"] .cass.mini .cLbl{background:#fff;color:#141414;box-shadow:0 2px 4px rgba(0,0,0,.12);border-radius:0}
+[data-theme="mixtape"] .cass.mini:nth-child(odd) .cLbl{transform:rotate(-.6deg)}[data-theme="mixtape"] .cass.mini:nth-child(even) .cLbl{transform:rotate(.5deg)}
+[data-theme="mixtape"] .cass.mini.inPlayer .cLbl{border-left:6px solid #ff4d2e}
+[data-theme="mixtape"] .cass.mini .cLbl b{font-size:20px}
+[data-theme="mixtape"] .cass.mini .cSide{background:none;color:#141414;font-family:"Caveat"}
+[data-theme="mixtape"] .cass.mini .cSide::after{content:counter(nr) ".";font-size:18px}
+[data-theme="mixtape"] .cass.mini .ar{display:inline;font-size:10px;color:#777}
+[data-theme="mixtape"] .cass.blank{border-color:#141414;color:#141414;border-radius:0}
+
+/* ═════ Mixerbord: skärm, fyra höga kanaler, transport med räkneverk, banden som tejpetiketter ═════ */
+[data-theme="mixerbord"] .app{grid-template-areas:"top top top top top top" "scr scr scr scr scr scr" "door door door door door door" "lev lev lev lev lev lev" "wave wave wave wave wave wave" "tr tr tr tr cnt cnt" "md md md md md md" "ks ks ks kt kt kt" "shelf shelf shelf shelf shelf shelf" "dock dock dock dock dock dock";
+  grid-template-rows:auto minmax(110px,1fr) auto 210px auto auto auto auto auto;padding:12px 22px 10px}
+[data-theme="mixerbord"] .levers{height:210px;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 8px 8px}
+[data-theme="mixerbord"] .lev{background:#242220;border:1px solid #111;border-radius:6px;padding:8px 0 6px}
+[data-theme="mixerbord"] .lev .lt{width:10px}
+[data-theme="mixerbord"] .lev .lc{width:36px;height:18px;margin-left:-18px}
+[data-theme="mixerbord"] .lev span{font-size:16px}
+[data-theme="mixerbord"] .transport{grid-template-columns:repeat(6,1fr);gap:4px}
+[data-theme="mixerbord"] .tb small{display:none}
+[data-theme="mixerbord"] .counter{width:auto;background:#f2e8c9;border-radius:5px}
+[data-theme="mixerbord"] .cTime,[data-theme="mixerbord"] .meta span{color:#2a2420;text-shadow:none}
+[data-theme="mixerbord"] .shelf{background:transparent;padding:0;align-self:center}
+[data-theme="mixerbord"] .shelfHint{display:none}
+[data-theme="mixerbord"] .cass.mini{width:74px;height:44px;padding:3px;background:#f3ecd0;border:none;border-radius:3px}
+[data-theme="mixerbord"] .cass.mini .cWin,[data-theme="mixerbord"] .cass.mini .cSide{display:none}
+[data-theme="mixerbord"] .cass.mini .cLbl{background:none;height:38px;padding:0 3px}
+[data-theme="mixerbord"] .cass.mini .cLbl b{font-size:14px}
+[data-theme="mixerbord"] .cass.blank{width:44px;height:44px;border-color:#8a8274}
+[data-theme="mixerbord"] .tapeStrip{padding:3px}
+
+/* ═════ Material: Lila "Spelas nu" — stor kakformad kassett, titel, vågig tid, knappgrupp, textkort ═════ */
+[data-theme^="m3"] .dock{display:grid;grid-template-columns:repeat(5,1fr);margin:0 -12px calc(-8px - env(safe-area-inset-bottom,0px));padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));background:var(--md-sc2);border-radius:0}
+[data-theme^="m3"] .dock button{height:auto;padding:0;gap:4px;background:none!important}
+[data-theme^="m3"] .dock .di{width:56px;height:30px;padding:5px 18px;border-radius:15px;transition:background .3s}
+[data-theme^="m3"] .dock button:active .di{background:var(--md-secC)}
+[data-theme^="m3"] .dock button:first-child .di{background:var(--md-secC);color:var(--md-onSecC)}
+[data-theme="m3-lila"] .app{grid-template-areas:"top top top top top top" "door door door door door door" "cnt cnt cnt cnt cnt cnt" "wave wave wave wave wave wave" "tr tr tr tr tr tr" "scr scr scr scr scr scr" "md md md md md md" "dock dock dock dock dock dock";
+  grid-template-rows:auto minmax(150px,1fr) auto auto auto minmax(120px,auto) auto auto}
+[data-theme="m3-lila"] .door{height:auto;aspect-ratio:1;max-height:230px;justify-self:center;width:auto;background:linear-gradient(135deg,#7f67be,#d0bcff 60%,#ffd8e4);box-shadow:none;
+  clip-path:polygon(100% 50%,98.9% 54.3%,96.3% 58.2%,93.3% 61.6%,91.3% 65%,90.7% 69%,90.7% 73.5%,90.2% 78.2%,88.3% 82.1%,84.7% 84.7%,80.2% 86%,75.7% 86.8%,72% 88.1%,69% 90.7%,66.1% 94.2%,62.7% 97.4%,58.7% 99.2%,54.3% 98.9%,50% 97%,46.1% 94.7%,42.4% 93.3%,38.4% 93.3%,33.9% 94.2%,29.2% 94.5%,25% 93.3%,21.8% 90.2%,19.8% 86%,18.3% 81.7%,16.3% 78.3%,13.2% 75.7%,9.3% 73.5%,5.5% 70.8%,3% 67.1%,2.6% 62.7%,3.7% 58.2%,5.3% 53.9%,6% 50%,5.3% 46.1%,3.7% 41.8%,2.6% 37.3%,3% 32.9%,5.5% 29.2%,9.3% 26.5%,13.2% 24.3%,16.3% 21.7%,18.3% 18.3%,19.8% 14%,21.8% 9.8%,25% 6.7%,29.2% 5.5%,33.9% 5.8%,38.4% 6.7%,42.4% 6.7%,46.1% 5.3%,50% 3%,54.3% 1.1%,58.7% .8%,62.7% 2.6%,66.1% 5.8%,69% 9.3%,72% 11.9%,75.7% 13.2%,80.2% 14%,84.7% 15.3%,88.3% 17.9%,90.2% 21.8%,90.7% 26.5%,90.7% 31%,91.3% 35%,93.3% 38.4%,96.3% 41.8%,98.9% 45.7%);
+  animation:spin 30s linear infinite}
+[data-theme="m3-lila"] .door>*{animation:spin 30s linear infinite reverse}
+[data-theme="m3-lila"] .inDeck{top:50%;margin-top:-62px;width:170px;height:120px;padding:8px;border-radius:16px}
+[data-theme="m3-lila"] .inDeck .cLbl{height:24px}[data-theme="m3-lila"] .inDeck .cLbl b{font-size:17px}[data-theme="m3-lila"] .inDeck .cLbl small{display:none}
+[data-theme="m3-lila"] .inDeck .cWin{height:44px;margin:8px 10px 0}
+[data-theme="m3-lila"] .reel{width:38px;height:38px;margin-top:-19px}
+[data-theme="m3-lila"] .door .prog{animation:none;left:14%;right:14%;bottom:18%}
+[data-theme="m3-lila"] .doorGlass{display:none}
+[data-theme="m3-lila"] .levers,[data-theme="m3-lila"] .kBox,[data-theme="m3-lila"] .shelf{display:none}
+[data-theme="m3-lila"] .counter{width:auto;background:transparent;flex-direction:row;justify-content:space-between;align-items:center;padding:0 4px}
+[data-theme="m3-lila"] .cTime{font-size:13px;font-weight:500}
+[data-theme="m3-lila"] .meta span{background:var(--md-secC);color:var(--md-onSecC);padding:4px 10px;border-radius:8px;font-size:11px}
+[data-theme="m3-lila"] .tapeStrip{background:transparent;padding:0}
+[data-theme="m3-lila"] .transport{grid-template-columns:1fr 1.7fr 1fr;gap:6px}
+[data-theme="m3-lila"] #bBack,[data-theme="m3-lila"] #bFwd,[data-theme="m3-lila"] #bEject{display:none}
+[data-theme="m3-lila"] .tb{height:62px}[data-theme="m3-lila"] .tb.play{height:70px}
+[data-theme="m3-lila"] #bPrev{border-radius:32px 12px 12px 32px}[data-theme="m3-lila"] #bNext{border-radius:12px 32px 32px 12px}
+[data-theme="m3-lila"] .tb small{display:none}
+[data-theme="m3-lila"] .screen{border-radius:24px;padding:12px 14px}
+[data-theme="m3-lila"] .modes{height:42px;padding:0;border:1px solid var(--md-out);background:transparent;border-radius:21px}
+[data-theme="m3-lila"] .modeInd{top:0;bottom:0;left:0;width:calc(100%/3);border-radius:0}
+[data-theme="m3-lila"] .modes button small{display:none}
+
+/* ═════ Material: Korall — texten fyller skärmen, flytande verktygsrad ═════ */
+[data-theme="m3-korall"] .app{grid-template-areas:"top top top top top top" "wave wave wave wave wave wave" "scr scr scr scr scr scr" "door door door door door door" "ks md md md md kt" "tr tr tr tr tr tr" "dock dock dock dock dock dock";
+  grid-template-rows:auto auto 1fr auto auto auto auto}
+[data-theme="m3-korall"] .levers,[data-theme="m3-korall"] .counter,[data-theme="m3-korall"] .shelf{display:none}
+[data-theme="m3-korall"] .screen{background:transparent;padding:0 4px}
+[data-theme="m3-korall"] .tapeStrip{background:transparent;padding:0}
+[data-theme="m3-korall"] .transport{justify-self:center;display:flex;gap:4px;padding:8px;border-radius:34px;background:var(--md-sc3);box-shadow:0 8px 20px rgba(0,0,0,.45)}
+[data-theme="m3-korall"] .transport .tb{width:50px;height:50px;border-radius:25px!important;background:transparent;color:var(--md-onV)}
+[data-theme="m3-korall"] .transport .tb.play{width:72px;height:56px;border-radius:18px!important;background:var(--md-pri);color:var(--md-onPri)}
+[data-theme="m3-korall"] .tb small,[data-theme="m3-korall"] #bEject{display:none}
+
+[data-theme="m3-korall"] .transport::after{content:"";width:0}
+[data-theme="m3-korall"] .app{padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px)}
+[data-theme="m3-korall"] .modes{height:40px}[data-theme="m3-korall"] .modes button small{display:none}
+[data-theme="m3-korall"] .knob{width:38px;height:38px}[data-theme="m3-korall"] .kTxt{display:none}
+/* knapparna för ark ligger då i rubriken */
+[data-theme="m3-korall"] .top .steps{display:none}
+
+/* ═════ Material: Grön — låtlistan först med minispelare ═════ */
+[data-theme="m3-gron"] .app{grid-template-areas:"top top top top top top" "shelf shelf shelf shelf shelf shelf" "door door door door door door" "scr scr scr scr tr tr" "wave wave wave wave wave wave" "ks md md md md kt" "dock dock dock dock dock dock";
+  grid-template-rows:auto 1fr auto auto auto auto auto}
+[data-theme="m3-gron"] .levers,[data-theme="m3-gron"] .counter{display:none}
+[data-theme="m3-gron"] .badge::before{content:"Mina låtar · ";color:var(--md-on)}
+[data-theme="m3-gron"] .shelf{background:transparent;padding:0;min-height:0;display:flex;flex-direction:column}
+[data-theme="m3-gron"] .shelfRow{flex:1;min-height:0;padding:0;gap:8px}
+[data-theme="m3-gron"] .cass.mini .cLbl{background:var(--md-sc1);color:var(--md-on);border-radius:20px;min-height:60px;padding:8px 14px 8px 8px;gap:12px}
+[data-theme="m3-gron"] .cass.mini .cSide{width:44px;height:44px;flex:none;border-radius:0;background:linear-gradient(135deg,#386a20,#b7f397);clip-path:polygon(100% 50%,96% 62%,90% 74%,84% 85%,73% 91%,62% 97%,50% 100%,38% 97%,27% 91%,16% 85%,10% 74%,4% 62%,0 50%,4% 38%,10% 26%,16% 15%,27% 9%,38% 3%,50% 0,62% 3%,73% 9%,84% 15%,90% 26%,96% 38%)}
+[data-theme="m3-gron"] .cass.mini .cSide::after{content:""}
+[data-theme="m3-gron"] .cass.mini .cLbl b{font-family:"Archivo";font-size:15px;font-weight:600}
+[data-theme="m3-gron"] .cass.mini .ar{display:inline;font-size:12px;color:var(--md-onV)}
+[data-theme="m3-gron"] .cass.mini .st2{font-size:11px;padding:4px 10px;border-radius:8px;background:var(--md-sc2);color:var(--md-onV)}
+[data-theme="m3-gron"] .cass.mini .st2.ok{background:#b7f397;color:#042100}[data-theme="m3-gron"] .cass.mini .st2.run{background:#bcebeb;color:#002020}
+[data-theme="m3-gron"] .cass.mini.inPlayer .cLbl{background:var(--md-secC)}
+[data-theme="m3-gron"] .cass.blank{height:52px;border-radius:16px;background:#bcebeb;border:none;color:#002020}
+[data-theme="m3-gron"] .shelfHint{display:none}
+[data-theme="m3-gron"] .screen{border-radius:24px 0 0 24px;padding:10px 12px;min-height:0;background:var(--md-secC)}
+[data-theme="m3-gron"] .screen .lPrev,[data-theme="m3-gron"] .screen .lNext,[data-theme="m3-gron"] .scope,[data-theme="m3-gron"] .chordBox,[data-theme="m3-gron"] #bLoop{display:none}
+[data-theme="m3-gron"] .lyr{padding:2px 0;text-align:left}[data-theme="m3-gron"] .lCur{font-size:15px}
+[data-theme="m3-gron"] .transport{display:flex;align-items:center;justify-content:flex-end;gap:4px;background:var(--md-secC);border-radius:0 24px 24px 0;padding-right:10px}
+[data-theme="m3-gron"] .transport .tb{display:none}
+[data-theme="m3-gron"] .transport .tb.play,[data-theme="m3-gron"] #bNext{display:flex;width:52px;height:52px;border-radius:16px}
+[data-theme="m3-gron"] #bNext{width:40px;height:40px;background:transparent}
+[data-theme="m3-gron"] .tb small{display:none}
+[data-theme="m3-gron"] .tapeStrip{background:transparent;padding:0}
+[data-theme="m3-gron"] .modes{height:40px}[data-theme="m3-gron"] .modes button small{display:none}
+[data-theme="m3-gron"] .knob{width:38px;height:38px}[data-theme="m3-gron"] .kTxt{display:none}
+
+/* ═════ Material: Svart — mixern först med fyra breda reglage ═════ */
+[data-theme="m3-amoled"] .app{grid-template-areas:"top top top top top top" "scr scr scr scr scr scr" "door door door door door door" "lev lev lev lev lev lev" "cnt cnt cnt cnt cnt cnt" "wave wave wave wave wave wave" "tr tr tr tr tr tr" "ks md md md md kt" "dock dock dock dock dock dock";
+  grid-template-rows:auto minmax(110px,1fr) auto 230px auto auto auto auto auto}
+[data-theme="m3-amoled"] .shelf{display:none}
+[data-theme="m3-amoled"] .levers{height:230px;padding:0;gap:12px;background:transparent}
+[data-theme="m3-amoled"] .lev{gap:8px}
+[data-theme="m3-amoled"] .lev .lt{width:100%;max-width:64px;border-radius:32px}
+[data-theme="m3-amoled"] .lev .lf{border-radius:32px}
+[data-theme="m3-amoled"] .lev .lc{width:30px;margin-left:-15px}
+[data-theme="m3-amoled"] .lev span{font-size:13px;font-weight:700;color:var(--md-on)}
+[data-theme="m3-amoled"] .counter{width:auto;background:transparent;flex-direction:row;justify-content:space-between;padding:0 4px}
+[data-theme="m3-amoled"] .tapeStrip{background:transparent;padding:0}
+[data-theme="m3-amoled"] .transport{grid-template-columns:1fr 1.7fr 1fr}
+[data-theme="m3-amoled"] #bBack,[data-theme="m3-amoled"] #bFwd,[data-theme="m3-amoled"] #bEject{display:none}
+[data-theme="m3-amoled"] #bPrev{border-radius:32px 12px 12px 32px}[data-theme="m3-amoled"] #bNext{border-radius:12px 32px 32px 12px}
+[data-theme="m3-amoled"] .tb small{display:none}
+[data-theme="m3-amoled"] .modes{height:40px}[data-theme="m3-amoled"] .modes button small{display:none}
+[data-theme="m3-amoled"] .knob{width:38px;height:38px}[data-theme="m3-amoled"] .kTxt{display:none}
+
+/* ═════ Material: Turkos — kassettkortet överst, textkort under, Sjung-knapp ═════ */
+[data-theme="m3-turkos"] .app{gap:10px}
+[data-theme="m3-turkos"] .deck{order:-1;border-radius:32px}
+[data-theme="m3-turkos"] .top{order:-2}
+[data-theme="m3-turkos"] .screen{flex:1;border-radius:24px}
+[data-theme="m3-turkos"] .shelf{display:none}
+[data-theme="m3-turkos"] .door{height:150px;border-radius:24px}
+[data-theme="m3-turkos"] .inDeck{top:14px;width:300px}
+[data-theme="m3-turkos"] .inDeck .cWin{height:70px;margin-top:12px}
+[data-theme="m3-turkos"] .reel{width:64px;height:64px;margin-top:-32px}
+[data-theme="m3-turkos"] .levers{display:none}
+[data-theme="m3-turkos"] .counter{flex:1;width:auto;flex-direction:row;justify-content:space-between;align-items:center}
+[data-theme="m3-turkos"] .dock{order:5}
+
+/* ═════ Material: Rosa — festtext i stora former, poängkort ═════ */
+[data-theme="m3-rosa"] body::after{content:"";position:fixed;left:-50px;top:110px;width:220px;height:220px;z-index:0;pointer-events:none;background:#ffd9df;animation:spin 18s linear infinite;
+  clip-path:polygon(100% 50%,96% 62%,90% 74%,84% 85%,73% 91%,62% 97%,50% 100%,38% 97%,27% 91%,16% 85%,10% 74%,4% 62%,0 50%,4% 38%,10% 26%,16% 15%,27% 9%,38% 3%,50% 0,62% 3%,73% 9%,84% 15%,90% 26%,96% 38%)}
+[data-theme="m3-rosa"] body::before{content:"";display:block!important;position:fixed;right:-30px;top:240px;width:160px;height:160px;z-index:0;pointer-events:none;background:#ffdcbd;border-radius:40% 60% 55% 45%;animation:spin 14s linear infinite reverse;opacity:1;inset:auto -30px auto auto}
+[data-theme="m3-rosa"] .app{grid-template-areas:"top top top top top top" "scr scr scr scr scr scr" "door door door door door door" "wave wave wave wave wave wave" "tr tr tr tr tr tr" "cnt cnt cnt cnt cnt cnt" "ks md md md md kt" "dock dock dock dock dock dock";
+  grid-template-rows:auto 1fr auto auto auto auto auto auto}
+[data-theme="m3-rosa"] .levers,[data-theme="m3-rosa"] .shelf{display:none}
+[data-theme="m3-rosa"] .screen{background:transparent;padding:0 2px}
+[data-theme="m3-rosa"] .lyr{text-align:left}
+[data-theme="m3-rosa"] .tapeStrip{background:transparent;padding:0}
+[data-theme="m3-rosa"] .transport{grid-template-columns:1fr 1.7fr 1fr}
+[data-theme="m3-rosa"] #bBack,[data-theme="m3-rosa"] #bFwd,[data-theme="m3-rosa"] #bEject{display:none}
+[data-theme="m3-rosa"] #bPrev{border-radius:32px 12px 12px 32px}[data-theme="m3-rosa"] #bNext{border-radius:12px 32px 32px 12px}
+[data-theme="m3-rosa"] .tb{height:62px}[data-theme="m3-rosa"] .tb.play{height:70px}[data-theme="m3-rosa"] .tb small{display:none}
+[data-theme="m3-rosa"] .counter{width:auto;background:#ffdcbd;border-radius:24px;padding:12px 16px;flex-direction:row;justify-content:space-between;align-items:center}
+[data-theme="m3-rosa"] .cTime{color:#2c1600;font-size:22px;font-weight:800}
+[data-theme="m3-rosa"] .meta span{color:#2c1600}
+[data-theme="m3-rosa"] .modes{height:40px}[data-theme="m3-rosa"] .modes button small{display:none}
+[data-theme="m3-rosa"] .knob{width:38px;height:38px}[data-theme="m3-rosa"] .kTxt{display:none}
+
+[data-theme="synthwave"] body::after{opacity:.55}
+[data-theme="synthwave"] .screen{position:relative;z-index:2}
+[data-theme="synthwave"] .lCur,[data-theme="synthwave"] .lNext{text-shadow:0 0 10px #12002a,0 2px 3px #12002a,0 0 22px #12002a}
+[data-theme="synthwave"] .cass.blank{font-size:10px;overflow:hidden}
+[data-theme="mixerbord"] .screen{min-height:150px}
+[data-theme="synthwave"] .cass.blank{width:78px;margin-left:8px}
 </style>
 </head>
 <body>
@@ -3945,7 +4280,7 @@ requestAnimationFrame(frame);
       const[sh,st]=shellOf(rec.id),[t,c]=shortStatus(rec),el=document.createElement("div");
       el.className="cass mini"+(rec===cur?" inPlayer":"");el.dataset.id=rec.id;el.title=rec.title;
       el.style.setProperty("--shell",sh);el.style.setProperty("--stripe",st);
-      el.innerHTML='<div class="cLbl"><span class="cSide">A</span><b>'+esc(rec.title||"—")+'</b><span class="st2 '+c+'">'+esc(t)+'</span></div><div class="cWin"><i></i><i></i></div>';
+      el.innerHTML='<div class="cLbl"><span class="cSide">A</span><b>'+esc(rec.title||"—")+'</b><small class="ar">'+esc(rec.artist||"")+'</small><span class="st2 '+c+'">'+esc(t)+'</span></div><div class="cWin"><i></i><i></i></div>';
       frag.appendChild(el);
     });
     shelf.insertBefore(frag,keep.nextSibling);
