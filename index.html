@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="sv">
 <head>
-<meta charset="UTF-8"><script>try{var t=JSON.parse(localStorage.getItem("ks_theme"));if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<meta charset="UTF-8"><script>try{var t=JSON.parse(localStorage.getItem("ks_theme"));if(t)document.documentElement.dataset.theme=t}catch(e){}(function(){function f(){var z=Math.min(1,innerWidth/384,innerHeight/770);document.documentElement.style.setProperty("--z",z.toFixed(4))}f();addEventListener("resize",f)})()</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#140f0b">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1300,6 +1300,50 @@ body.playing .lCur .w.now{transform:translateY(-2px) scale(1.06)}
 [data-theme="fickstudio"] .screen{background:rgba(12,12,12,.55)}
 [data-theme="mixtape"] body.playing .shelfRow{height:96px}
 [data-theme="synthwave"] .shelfRow{padding-left:12px}
+
+
+/* ═════════ Passform: allt ritas för 384 px bredd och skalas ner så inget krockar på mindre skärmar ═════════ */
+.app{zoom:var(--z,1)}
+.transport{min-width:0}
+.transport>.tb{min-width:0}
+.screen .lyr{gap:5px}
+.lyr .lCur{overflow-wrap:anywhere}
+.transport{grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.45fr) repeat(2,minmax(0,1fr))}
+[data-theme="mixerbord"] .transport{grid-template-columns:repeat(6,minmax(0,1fr))}
+[data-theme="jukebox"] .transport .tb.play,[data-theme="synthwave"] .transport .tb.play{margin-top:0;height:58px;width:58px}
+[data-theme="jukebox"] .transport,[data-theme="synthwave"] .transport{align-items:center;min-height:60px}
+/* Lila: kakan får fast storlek så den aldrig glider in i rubriken */
+[data-theme="m3-lila"] .door{width:min(100%,210px);max-height:210px;align-self:center}
+[data-theme="m3-lila"] body.playing .door{width:104px;height:104px;max-height:104px;justify-self:start;margin-left:4px}
+[data-theme="m3-lila"] body.playing .app{grid-template-rows:auto 112px auto 1fr auto auto auto}
+[data-theme="m3-lila"] .deckTitle{display:none}
+/* Korall: orden växer inte längre in i varandra */
+[data-theme="m3-korall"] .lCur{font-size:36px;line-height:1.22;scale:none}
+[data-theme="m3-korall"] .lCur .w:not(.sung){transform:none;filter:none;opacity:.32}
+[data-theme="m3-korall"] .lCur .w.now{transform:translateY(-3px);rotate:none}
+[data-theme="m3-korall"] .lyr{gap:14px}
+body.playing .lCur .w.now{transform:translateY(-2px)}
+[data-theme="m3-rosa"] .lCur .w.now{transform:translateY(-5px)}
+/* Mixtape: mindre polaroid och lista så texten får plats */
+[data-theme="mixtape"] .app{grid-template-rows:132px minmax(130px,1fr) auto auto auto 118px auto}
+[data-theme="mixtape"] .shelfRow{height:118px}
+[data-theme="mixtape"] body.playing .app{grid-template-rows:96px minmax(150px,1fr) auto auto auto 88px auto}
+[data-theme="mixtape"] body.playing .shelfRow{height:88px}
+/* Synthwave: reglagen får plats med sina namn */
+[data-theme="synthwave"] .levers{min-height:64px}
+.transport .tb,.transport .tb.play{width:auto}
+[data-theme="m3-korall"] .transport .tb{width:50px}[data-theme="m3-korall"] .transport .tb.play{width:72px}
+[data-theme="jukebox"] .transport .tb{width:50px}[data-theme="synthwave"] .transport .tb{width:48px}
+[data-theme="jukebox"] .transport .tb.play,[data-theme="synthwave"] .transport .tb.play{width:58px}
+[data-theme="mixtape"] .transport .tb{width:50px}[data-theme="mixtape"] .transport .tb.play{width:72px}
+[data-theme="m3-gron"] .transport .tb.play{width:52px}[data-theme="m3-gron"] #bNext{width:40px}[data-theme="m3-gron"] body.playing .transport .tb.play{width:84px}
+/* Synthwave: lugnare — reglagen bort, bakgrunden visar redan musiken */
+[data-theme="synthwave"] .levers{display:none!important}
+[data-theme="synthwave"] .app{grid-template-areas:"top top top top top top" "scr scr scr scr scr scr" "door door door door door door" "cnt cnt cnt cnt cnt cnt" "wave wave wave wave wave wave" "tr tr tr tr tr tr" "md md md md md md" "ks ks ks kt kt kt" "shelf shelf shelf shelf shelf shelf" "dock dock dock dock dock dock"}
+[data-theme="mixerbord"] .app{grid-template-rows:auto minmax(110px,1fr) auto minmax(120px,26vh) auto auto auto auto auto}
+[data-theme="mixerbord"] .levers{height:auto;min-height:0}
+[data-theme="mixtape"] body.playing .badge{font-size:22px}
+[data-theme="mixtape"] body.playing .top .steps{display:none}
 </style>
 </head>
 <body>
@@ -4470,7 +4514,7 @@ requestAnimationFrame(frame);
     const C=["#ff4d2e","#2d3cff","#ffb23f","#141414","#3fbf7f"];
     if(sp.length<40)sp.push({x:rnd(0,W),y:rnd(-H,0),r:rnd(0,6),vr:rnd(-.05,.05),vy:rnd(.3,1),vx:rnd(-.3,.3),w:rnd(4,12),h:rnd(3,7),c:C[sp.length%5]});
     for(const q of sp){if(pulse>.6&&q.y>H*.4){q.vy=-rnd(2,5);}q.vy=Math.min(q.vy+.04,1.2);q.y+=q.vy;q.x+=q.vx;q.r+=q.vr*(1+pulse*4);
-      if(q.y>H+10){q.y=-10;q.x=rnd(0,W);}cx.save();cx.translate(q.x,q.y);cx.rotate(q.r);cx.globalAlpha=.55;cx.fillStyle=q.c;cx.fillRect(-q.w/2,-q.h/2,q.w,q.h*Math.abs(Math.cos(q.r*2)));cx.restore();}
+      if(q.y>H+10){q.y=-10;q.x=rnd(0,W);}cx.save();cx.translate(q.x,q.y);cx.rotate(q.r);cx.globalAlpha=.3;cx.fillStyle=q.c;cx.fillRect(-q.w/2,-q.h/2,q.w,q.h*Math.abs(Math.cos(q.r*2)));cx.restore();}
     cx.globalAlpha=1;
   };
   /* Mixerbord: bakgrundsspektrum som LED-staplar */
@@ -4491,7 +4535,7 @@ requestAnimationFrame(frame);
   /* Material Korall: ringar som sprider sig på varje slag */
   const RG=[];let lastBeat=0;
   S["m3-korall"]=t=>{
-    if(beats!==lastBeat){lastBeat=beats;RG.push({r:30,a:.5,x:W/2,y:H*.45});}
+    if(beats!==lastBeat){lastBeat=beats;RG.push({r:30,a:.3,x:W/2,y:H*.45});}
     for(let i=RG.length-1;i>=0;i--){const g=RG[i];g.r+=4+g.r*.02;g.a*=.965;if(g.a<.02){RG.splice(i,1);continue;}
       cx.strokeStyle="rgba(255,140,110,"+g.a+")";cx.lineWidth=3;cx.beginPath();cx.arc(g.x,g.y,g.r,0,6.2832);cx.stroke();}
     const v=lv("voc");const g=cx.createRadialGradient(W/2,H*.45,0,W/2,H*.45,W*.7);g.addColorStop(0,"rgba(255,120,90,"+(.08+v*.2)+")");g.addColorStop(1,"rgba(255,120,90,0)");cx.fillStyle=g;cx.fillRect(0,0,W,H);
@@ -4515,7 +4559,7 @@ requestAnimationFrame(frame);
     const C=["#ffb1c1","#ffdcbd","#c9b6ff","#ffd9df","#b8ecd2"];
     if(sp.length<12)sp.push({x:rnd(0,W),y:rnd(0,H),s:rnd(18,44),r:rnd(0,6),vr:rnd(-.01,.01),vy:rnd(-.25,-.08),k:sp.length%3,c:C[sp.length%5],j:0});
     for(const q of sp){q.y+=q.vy;q.r+=q.vr*(1+pulse*6);q.j=Math.max(q.j*.85,pulse);if(q.y<-60){q.y=H+60;q.x=rnd(0,W);}
-      const s=q.s*(1+q.j*.3);cx.save();cx.translate(q.x,q.y-q.j*14);cx.rotate(q.r);cx.globalAlpha=.7;cx.fillStyle=q.c;cx.beginPath();
+      const s=q.s*(1+q.j*.3);cx.save();cx.translate(q.x,q.y-q.j*14);cx.rotate(q.r);cx.globalAlpha=.38;cx.fillStyle=q.c;cx.beginPath();
       if(q.k===0){for(let i=0;i<10;i++){const a=i*.6283,rr=i&1?s*.5:s;cx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr);}}
       else if(q.k===1){cx.roundRect(-s*.7,-s*.7,s*1.4,s*1.4,s*.45);}
       else{cx.moveTo(0,-s);cx.lineTo(s*.9,s*.7);cx.lineTo(-s*.9,s*.7);}
