@@ -1345,6 +1345,84 @@ body.playing .lCur .w.now{transform:translateY(-2px)}
 [data-theme="mixtape"] body.playing .badge{font-size:22px}
 [data-theme="mixtape"] body.playing .top .steps{display:none}
 [data-theme="m3-rosa"] .lCur .w.now{transform:none}[data-theme="m3-rosa"] .lCur{line-height:1.3}
+
+/* ── ordning: små meddelanden högst upp, aldrig över knapparna ── */
+#toast{top:calc(env(safe-area-inset-top,0px) + 54px)!important;bottom:auto!important;max-width:min(86vw,340px);font-size:13px!important;padding:9px 16px!important;border-radius:20px!important;text-align:center;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,-14px)}}
+/* rattar och lägesväljare får egna kolumner */
+.ctlRow{grid-template-columns:72px minmax(0,1fr) 72px;gap:8px}
+.ctlRow .kBox{min-width:0;overflow:visible}
+.modeWrap>*{min-width:0}
+/* låthyllor: inget sticker ut åt sidan, många låtar skrollar */
+[data-theme="jukebox"] .shelfRow{grid-template-columns:repeat(2,minmax(0,1fr));max-height:132px;overflow-y:auto;overflow-x:hidden}
+.cass.mini .cLbl{min-width:0}
+.cass.mini .cLbl b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shelf{min-width:0;overflow:hidden}
+/* text på skärmen: aldrig utanför */
+.lCur,.lPrev,.lNext{max-width:100%;overflow-wrap:break-word}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+
+
+/* ═════════ Synkstudio ═════════ */
+.syn{position:fixed;inset:0;z-index:9500;display:flex;flex-direction:column;gap:8px;
+  padding:calc(env(safe-area-inset-top,0px) + 8px) 12px calc(env(safe-area-inset-bottom,0px) + 12px);
+  background:#121316;color:#f2f2f2;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;animation:synIn .35s cubic-bezier(.2,.9,.3,1)}
+.syn[hidden]{display:none}
+@keyframes synIn{from{opacity:0;transform:translateY(24px)}}
+.syn button{font:inherit;color:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.synTop{display:flex;align-items:center;gap:10px;min-height:44px}
+.synTi{flex:1;min-width:0;display:flex;flex-direction:column}
+.synTi b{font-size:17px}.synTi small{font-size:12px;opacity:.6}
+.synIc{width:40px;height:40px;border-radius:20px;background:rgba(255,255,255,.08);font-size:16px;flex:none}
+.synChip{height:38px;padding:0 14px;border-radius:19px;background:rgba(255,255,255,.08);font-size:13px;font-weight:600;white-space:nowrap}
+.synChip.on{background:var(--md-pri,#ffb000);color:var(--md-onPri,#111)}
+.synTl{flex:0 0 auto;height:clamp(150px,27vh,230px);border-radius:18px;background:#1b1d22;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.synTl canvas{width:100%;height:100%;display:block;touch-action:none}
+.synHelp{font-size:11px;opacity:.45;text-align:center;margin-top:-2px}
+.synEdit{display:flex;align-items:center;gap:6px;padding:6px;border-radius:16px;background:rgba(255,255,255,.07);flex-wrap:wrap;justify-content:center}
+.synEdit[hidden]{display:none}
+.synEdit span{font-size:12px;opacity:.7;width:100%;text-align:center}
+.synEdit button:not(.synIc){height:36px;padding:0 12px;border-radius:12px;background:rgba(255,255,255,.1);font-size:13px;font-weight:600}
+.synEdit .synIc{width:36px;height:36px}
+.synNow{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:8px;padding:4px 6px;overflow:hidden}
+.synLbl{font-size:12px;letter-spacing:.04em;text-transform:uppercase;opacity:.55}
+.synLine{font-size:clamp(20px,6.2vw,28px);font-weight:700;line-height:1.2;max-width:100%;overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.synNext{font-size:13px;opacity:.45;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.synCue{--f:0;position:relative;height:30px;min-width:190px;padding:0 16px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;overflow:hidden;background:transparent;opacity:.0;transition:opacity .2s}
+.synCue.on,.synCue.beats{opacity:1;background:rgba(255,255,255,.07)}
+.synCue i{position:absolute;left:0;top:0;bottom:0;width:calc(var(--f)*100%);background:var(--md-pri,#ffb000);opacity:.35}
+.synCue span{position:relative}
+.synCue.now{background:var(--md-pri,#ffb000);color:var(--md-onPri,#111);animation:cuePop .3s}
+@keyframes cuePop{from{transform:scale(1.15)}}
+.synCtl{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.synPlayB{width:52px;height:52px;border-radius:26px;background:#fff!important;color:#111!important;font-size:18px;flex:none}
+.synSpd{display:flex;background:rgba(255,255,255,.08);border-radius:19px;padding:3px}
+.synSpd button{height:32px;padding:0 9px;border-radius:16px;font-size:12px;font-weight:700;opacity:.7}
+.synSpd button.on{background:#fff;color:#111;opacity:1}
+.synBtns{display:grid;grid-template-columns:1fr 1fr 2.2fr;gap:8px;height:clamp(76px,13vh,104px)}
+.synBtns button{border-radius:22px;background:rgba(255,255,255,.09);display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:700;gap:2px;transition:transform .12s,background .2s}
+.synBtns small{font-size:11px;font-weight:600;opacity:.7}
+.synBtns button:disabled{opacity:.3}
+.synBtns button:active{transform:scale(.95)}
+.synTap{background:var(--md-pri,#ffb000)!important;color:var(--md-onPri,#111);font-size:26px!important;letter-spacing:.06em}
+.synTap.hit{animation:tapHit .35s}
+@keyframes tapHit{0%{transform:scale(.92);box-shadow:0 0 0 0 rgba(255,255,255,.6)}100%{transform:scale(1);box-shadow:0 0 0 18px rgba(255,255,255,0)}}
+body.synOn #toast{top:calc(env(safe-area-inset-top,0px) + 60px)!important;z-index:9600}
+@media (max-height:640px){.synHelp{display:none}.synNext{display:none}}
+.syn .synSpd button{background:transparent;color:#f2f2f2;box-shadow:none;width:auto;min-width:0}
+.syn .synSpd button.on{background:#fff;color:#111}
+.syn .synChip{color:#f2f2f2;box-shadow:none}
+.syn .synChip.on{color:var(--md-onPri,#111)}
+.syn .synIc{color:#f2f2f2;box-shadow:none}
+.syn .synEdit button{color:#f2f2f2;box-shadow:none}
+.syn .synBtns button{color:#f2f2f2;box-shadow:none}
+.syn .synBtns .synTap{color:var(--md-onPri,#111)}
+.synCtl{gap:6px}
+#synMag{width:44px;padding:0;font-size:18px;flex:none}
+#synBack{padding:0 12px;flex:none}
+.synSpd{flex:1;min-width:0;justify-content:space-between}
+.synSpd button{flex:1}
+.synEdit{position:relative;padding-right:44px}#synSelX{position:absolute;right:6px;top:6px;width:32px;height:32px}
 </style>
 </head>
 <body>
@@ -1557,7 +1635,7 @@ body.playing .lCur .w.now{transform:translateY(-2px)}
       </div>
       <div class="row">
         <button class="hw sb" id="bResync">Synka om</button>
-        <button class="hw sb" id="bTapMode">Tap-synk</button>
+        <button class="hw sb" id="bTapMode">Synka texten</button>
         <button class="hw sb" id="bAdd">+ Rad</button>
       </div>
       <div class="llist" id="llist"></div>
@@ -1681,6 +1759,36 @@ body.playing .lCur .w.now{transform:translateY(-2px)}
   </div>
 </div>
 
+<div class="syn" id="syn" hidden>
+  <div class="synTop">
+    <button class="synIc" id="synX" title="Stäng">✕</button>
+    <div class="synTi"><b>Synka texten</b><small id="synCnt"></small></div>
+    <button class="synChip" id="synAI" title="Låt AI:n lägga texten efter sången">✨ AI-förslag</button>
+  </div>
+  <div class="synTl"><canvas id="synCv"></canvas></div>
+  <div class="synHelp">Dra i vågen = spola · dra en rads kant = flytta raden · tryck på en rad = välj den</div>
+  <div class="synEdit" id="synEdit" hidden>
+    <span id="synSelT"></span>
+    <button id="synM">−0,1 s</button><button id="synPlayLn">▶ Lyssna</button><button id="synP">+0,1 s</button><button id="synHere">Sätt här</button><button id="synSelX" class="synIc">✕</button>
+  </div>
+  <div class="synNow">
+    <div class="synLbl" id="synLbl"></div>
+    <div class="synLine" id="synLine"></div>
+    <div class="synCue" id="synCue"><i></i><span id="synCueT"></span></div>
+    <div class="synNext" id="synNext"></div>
+  </div>
+  <div class="synCtl">
+    <button id="synBack" class="synChip">↺ 3 s</button>
+    <button id="synPlay" class="synPlayB">▶</button>
+    <div class="synSpd" id="synSpd"><button data-v="0.6">0,6×</button><button data-v="0.8">0,8×</button><button data-v="1">1×</button></div>
+    <button id="synMag" class="synChip" title="Magnet: drar trycket till närmaste sångstart eller taktslag">🧲</button>
+  </div>
+  <div class="synBtns">
+    <button id="synUndo">↶<small>Ångra</small></button>
+    <button id="synBrk">♪<small>Mellanspel</small></button>
+    <button id="synTap" class="synTap">TRYCK<small>raden börjar nu</small></button>
+  </div>
+</div>
 <div class="tapbar" id="tapbar" hidden>
   <div style="flex:1;min-width:0"><div class="tt">Tap-synk</div><div class="tl" id="tapLine"></div><div class="tc" id="tapCount"></div></div>
   <button class="iconBtn tapUndo" id="bTapUndo" title="Ångra senaste tryck">↶</button>
@@ -2630,6 +2738,7 @@ function morph(fn){
   H.classList.add("vt");
   try{const v=document.startViewTransition(fn);v.finished.finally(()=>H.classList.remove("vt"));}catch(e){H.classList.remove("vt");fn();}
 }
+setInterval(()=>{const b=$("lCur")&&$("lCur").parentElement;if(b&&b.clientHeight&&(b.clientHeight!==fitLyr.h||b.clientWidth!==fitLyr.w)){fitLyr.h=b.clientHeight;fitLyr.w=b.clientWidth;fitLyr();}},400);
 function enterAnim(){const a=document.querySelector(".app");if(!a)return;a.classList.remove("enter");void a.offsetWidth;a.classList.add("enter");setTimeout(()=>a.classList.remove("enter"),1500);}
 function renderThemes(){
   const el=document.getElementById("themeGrid");if(!el)return;
@@ -2973,7 +3082,7 @@ function hardReset(){
   semi=0;tempo=1;semiKnob.set(0);tempoKnob.set(1);
   lyrics=[];lyrSorted=[];lyrOffset=0;loopA=loopB=null;loopOn=false;
   mix={voc:1,inst:1,click:0};mute={voc:false,inst:false,click:false};solo={voc:false,inst:false,click:false};
-  tapMode=false;$("tapbar").hidden=true;ai=AI0();syncBusy=false;jobHide();
+  tapMode=false;$("tapbar").hidden=true;synClose(true);ai=AI0();syncBusy=false;jobHide();
   resetScore();setSt("fetchSt","");
   $("scrEmpty").hidden=false;$("scrMain").hidden=true;$("busy").hidden=true;
   lastLyrKey="";lastChord=-2;renderList();updateKnobLabels();updateAll();syncMixUI();
@@ -3245,7 +3354,22 @@ function setLyr(prev,main,next,cls,idx,ln){
   const el=$("lCur");el.className="lCur "+cls+(wordEls?" words":"")+(String(main).length>30?" long":"");
   if(changedMain&&cls===""){void el.offsetWidth;el.classList.add("anim");}
   if(idx!==lastActRow){lastActRow=idx;document.querySelectorAll("#llist .lrow").forEach((r,i)=>r.classList.toggle("act",i===idx));}
+  fitLyr();
 }
+/* texten krymper tills den får plats i skärmen — aldrig över rubriken eller utanför */
+function fitLyr(){
+  const el=$("lCur"),box=el&&el.parentElement;if(!box||!box.clientHeight)return;
+  const P=$("lPrev"),N=$("lNext");
+  el.style.fontSize="";P.style.display="";N.style.display="";P.style.fontSize="";N.style.fontSize="";
+  const over=()=>box.scrollHeight>box.clientHeight+1||el.scrollWidth>box.clientWidth+1;
+  if(!over())return;
+  const base=parseFloat(getComputedStyle(el).fontSize),sb=parseFloat(getComputedStyle(N).fontSize)||13;
+  for(let k=.9;k>.42;k*=.9){el.style.fontSize=(base*k).toFixed(1)+"px";P.style.fontSize=N.style.fontSize=Math.max(11,sb*Math.min(1,k+.15)).toFixed(1)+"px";if(!over())return;}
+  P.style.display="none";if(!over())return;
+  N.style.display="none";
+  for(let k=.42;k>.28;k*=.9){if(!over())return;el.style.fontSize=Math.max(13,base*k).toFixed(1)+"px";}
+}
+addEventListener("resize",()=>setTimeout(fitLyr,60));
 /* ordet som sjungs just nu fylls i takt med sångarens röst (ordtider från den bortplockade sången) */
 function sylW(w){const m=w.toLowerCase().match(/[aeiouyåäöæøéèêáàíóúüœ]+/g);return Math.max(1,m?m.length:1)+w.length/6;}
 function paintWords(ln,rel,span){
@@ -4068,7 +4192,7 @@ $("bSaveLrc").onclick=()=>{
 };
 $("bClr").onclick=()=>{if(!lyrics.length)return;if(confirm("Radera all text för den här låten?")){lyrics=[];lyrOffset=0;if(cur){cur.lyrState="none";cur.lyrInfo="";cur.syncTried=false;}lyricsChanged();}};
 let tapHist=[];
-function startTapSync(fromStart){
+function startTapSyncOld(fromStart){
   if(!buf){toast("Öppna en låt först","e");return;}
   if(!lyrSorted.length){toast("Lägg till text först","e");return;}
   closeSheet();tapMode=true;tapHist=[];markManual();if(cur&&cur.instr)cur.lyrInfo="tryckt i takt";lastLyrKey="";
@@ -4104,6 +4228,237 @@ $("bTap").addEventListener("pointerdown",e=>{
 });
 $("bTapX").onclick=()=>{tapMode=false;$("tapbar").hidden=true;};
 function updTap(){$("tapLine").textContent=lyrSorted[tapIdx]?lyrSorted[tapIdx].t:"";$("tapCount").textContent="Rad "+(tapIdx+1)+" av "+lyrSorted.length;}
+/* ═════════ Synkstudio: lägg texten i takt med låten, med tidslinje och hjälp ═════════
+   - Tidslinjen visar låten som vågform. Sången är färgad och 'sång börjar'-pilar visar var AI:n hör sång.
+   - Taktslag visas som streck. Magneten drar ditt tryck till närmaste sångstart eller taktslag.
+   - Raderna ligger som block under vågformen. Dra ett block för att flytta raden, tryck på det för att välja.
+   - Långsammare uppspelning (0,6× / 0,8×) gör det lättare att träffa. */
+const syn={open:false,cache:null,mag:LS.get("ks_mag",true)!==false,sel:-1,drag:null,oldTempo:1,flash:null,raf:0,PPS:95};
+function synData(){
+  const key=songId+"|"+(analyzed?1:0)+"|"+(cur&&cur.instr?1:0);
+  if(syn.cache&&syn.cache.key===key)return syn.cache;
+  const hop=.02,sr=buf.sampleRate,h=Math.round(sr*hop),F=Math.floor(buf.length/h);
+  const env=(b)=>{const a=b.getChannelData(0),c=b.numberOfChannels>1?b.getChannelData(1):a,o=new Float32Array(F);
+    for(let f=0;f<F;f++){let s=0;const i0=f*h;for(let i=0;i<h;i+=2){const v=(a[i0+i]+c[i0+i])*.5;s+=v*v;}o[f]=Math.sqrt(s/(h/2));}return o;};
+  const mixE=env(buf);
+  let vocE=null,ons=[];
+  if(analyzed&&baseBufs&&baseBufs.voc&&!(cur&&cur.instr)){
+    vocE=env(baseBufs.voc);
+    const srt=[...vocE].sort((a,b)=>a-b),pk=srt[Math.floor(srt.length*.97)]||0;
+    if(pk<.004)vocE=null;
+    else{
+      const sm=new Float32Array(F);for(let i=0;i<F;i++)sm[i]=(vocE[Math.max(0,i-1)]+vocE[i]+vocE[Math.min(F-1,i+1)])/3;
+      const th=pk*.16;let last=-99;
+      for(let i=15;i<F;i++){
+        if(sm[i]<th||sm[i-1]>=th)continue;
+        let q=0;for(let k=i-15;k<i;k++)q=Math.max(q,sm[k]);if(q>=th*.7)continue;
+        let j=i;while(j>i-6&&sm[j-1]<sm[j]&&sm[j-1]>th*.35)j--;
+        const t=j*hop;if(t-last<.6)continue;last=t;ons.push(t);
+      }
+      for(let i=0;i<F;i++)vocE[i]/=pk;
+    }
+  }
+  const mp=[...mixE].sort((a,b)=>a-b)[Math.floor(F*.97)]||1;for(let i=0;i<F;i++)mixE[i]/=mp;
+  syn.cache={key,hop,mixE,vocE,ons,beats:ana&&ana.beats?ana.beats:[]};
+  return syn.cache;
+}
+/* magnet: närmaste sångstart (±0,25 s) — eller taktslag/halvslag (±0,12 s) när sången saknas */
+function synSnap(t){
+  if(!syn.mag)return t;const c=syn.cache;if(!c)return t;
+  let best=t,bd=1e9;
+  if(c.ons.length){for(const o of c.ons){const d=Math.abs(o-t);if(d<.25&&d<bd){bd=d;best=o;}}}
+  if(bd>1e8&&c.beats.length){
+    for(let i=0;i<c.beats.length;i++){const b=c.beats[i],nb=c.beats[i+1];
+      for(const [x,w] of nb!=null?[[b,.12],[(b+nb)/2,.05]]:[[b,.12]]){const d=Math.abs(x-t);if(d<w&&d<bd){bd=d;best=x;}}}
+  }
+  if(bd<1e8)syn.flash={t:best,from:t,at:performance.now()};
+  return best;
+}
+function startTapSync(fromStart){openSyn(fromStart);}
+function openSyn(fromStart){
+  if(!buf){toast("Öppna en låt först","e");return;}
+  if(!lyrSorted.length){toast("Lägg till text först","e");return;}
+  closeSheet();synData();
+  syn.open=true;syn.sel=-1;tapMode=true;tapHist=[];markManual();
+  if(cur&&cur.instr)cur.lyrInfo="tryckt i takt";lastLyrKey="";
+  if(fromStart){lyrOffset=0;tapIdx=0;lyrSorted.forEach(l=>{delete l.w;delete l.e;});seek(0);}
+  else{const t=curT()-lyrOffset;tapIdx=lyrSorted.findIndex(x=>x.s>=t-.3);if(tapIdx<0)tapIdx=0;}
+  syn.oldTempo=tempo;
+  $("syn").hidden=false;document.body.classList.add("synOn");
+  $("synAI").hidden=!(syn.cache.vocE);
+  $("synMag").classList.toggle("on",syn.mag);
+  synSpeedUI();synText();synSize();
+  cancelAnimationFrame(syn.raf);syn.raf=requestAnimationFrame(synLoop);
+}
+function synClose(silent){
+  if(!syn.open)return;syn.open=false;tapMode=false;cancelAnimationFrame(syn.raf);
+  $("syn").hidden=true;document.body.classList.remove("synOn");
+  if(tempo!==syn.oldTempo){tempo=syn.oldTempo;tempoKnob.set(tempo);liveChange();}
+  if(!silent){lyricsChanged();lyrStatus();}
+}
+function synSpeedUI(){$("synSpd").querySelectorAll("button").forEach(b=>b.classList.toggle("on",Math.abs(+b.dataset.v-tempo)<.01));}
+$("synSpd").querySelectorAll("button").forEach(b=>b.onclick=()=>{tempo=+b.dataset.v;tempoKnob.set(tempo);liveChange();synSpeedUI();});
+$("synX").onclick=()=>synClose();
+$("synPlay").onclick=()=>{togglePlay();};
+$("synBack").onclick=()=>seek(Math.max(0,curT()-3));
+$("synMag").onclick=()=>{syn.mag=!syn.mag;LS.set("ks_mag",syn.mag);$("synMag").classList.toggle("on",syn.mag);toast(syn.mag?"Magnet på — dina tryck dras till närmaste sångstart":"Magnet av — exakt där du trycker");};
+$("synAI").onclick=()=>{
+  if(syncBusy)return;synClose(true);
+  cur.lyrState="rough";cur.lyrInfo="";cur.syncTried=false;
+  syncText(cur.segsLang!==effLang(lyrSorted.map(l=>l.t))).then(()=>{pump();toast("AI har lagt texten — öppna Synka igen för att finjustera","s");});
+};
+function synText(){
+  const L=lyrSorted,n=L.length,done=tapIdx>=n;
+  $("synCnt").textContent=done?"Alla "+n+" rader klara":"Rad "+(tapIdx+1)+" av "+n;
+  $("synLbl").textContent=done?"Klart! Dra raderna i tidslinjen för att finjustera":"Tryck när den här raden börjar sjungas";
+  $("synLine").textContent=done?"✓":L[tapIdx].t;
+  $("synNext").textContent=!done&&L[tapIdx+1]?"Sen: "+L[tapIdx+1].t:"";
+  $("synTap").disabled=done;$("synBrk").disabled=!tapIdx;$("synUndo").disabled=!tapHist.length;
+  const s=syn.sel>=0&&L[syn.sel];$("synEdit").hidden=!s;
+  if(s)$("synSelT").textContent="Rad "+(syn.sel+1)+" · "+fmt(s.s+lyrOffset)+","+Math.floor(((s.s+lyrOffset)%1)*10);
+}
+/* TRYCK: raden börjar nu (magneten finjusterar) */
+$("synTap").addEventListener("pointerdown",e=>{
+  e.preventDefault();if(tapIdx>=lyrSorted.length)return;
+  if(!playing){togglePlay();toast("Låten startade — tryck när raden börjar");return;}
+  const lag=Math.max(0,(performance.now()-(e.timeStamp||performance.now()))/1000)*(ver?ver.T:1);
+  const ln=lyrSorted[tapIdx];tapHist.push({i:tapIdx,s:ln.s,e:ln.e,brk:ln.brk});
+  const t=synSnap(Math.max(0,curT()-lag));
+  ln.s=+Math.max(0,t-lyrOffset).toFixed(2);delete ln.w;delete ln.e;delete ln.brk;
+  for(let k=tapIdx+1;k<lyrSorted.length;k++)if(lyrSorted[k].s<=ln.s)lyrSorted[k].s=+(ln.s+.5*(k-tapIdx)).toFixed(2);
+  if(tapIdx>0){const p=lyrSorted[tapIdx-1];if(p.e!=null&&p.s+p.e>ln.s){delete p.e;delete p.brk;}}
+  tapIdx++;syn.sel=-1;
+  const b=$("synTap");b.classList.remove("hit");void b.offsetWidth;b.classList.add("hit");
+  if(navigator.vibrate)try{navigator.vibrate(12);}catch(_){}
+  lyricsChanged();synText();
+  if(tapIdx>=lyrSorted.length){toast("Klart — hela texten ligger i takt ✓","s");lyrStatus();}
+});
+$("synBrk").addEventListener("pointerdown",e=>{
+  e.preventDefault();if(!tapIdx)return;
+  const lag=Math.max(0,(performance.now()-(e.timeStamp||performance.now()))/1000)*(ver?ver.T:1);
+  const l=lyrSorted[tapIdx-1],t=curT()-lag-lyrOffset;if(t<=l.s+.2)return;
+  tapHist.push({brk:tapIdx-1});l.e=+(t-l.s).toFixed(2);l.brk=1;delete l.w;
+  lyricsChanged();synText();toast("Mellanspel — texten väntar tills nästa tryck");
+});
+$("synUndo").onclick=()=>{
+  if(!tapHist.length)return;const h=tapHist.pop();
+  if(h.i==null){const l=lyrSorted[h.brk];if(l){delete l.e;delete l.brk;}}
+  else{tapIdx=h.i;const l=lyrSorted[tapIdx];l.s=h.s;if(h.e!=null)l.e=h.e;if(h.brk)l.brk=1;seek(Math.max(0,l.s+lyrOffset-3));}
+  lyricsChanged();synText();
+};
+/* vald rad: finjustera */
+function synMove(i,ns){
+  const L=lyrSorted,lo=i>0?L[i-1].s+.1:0,hi=i+1<L.length?L[i+1].s-.1:buf.duration;
+  L[i].s=+clamp(ns,lo,hi).toFixed(2);delete L[i].w;
+}
+$("synM").onclick=()=>{if(syn.sel<0)return;synMove(syn.sel,lyrSorted[syn.sel].s-.1);lyricsChanged();synText();};
+$("synP").onclick=()=>{if(syn.sel<0)return;synMove(syn.sel,lyrSorted[syn.sel].s+.1);lyricsChanged();synText();};
+$("synHere").onclick=()=>{if(syn.sel<0)return;synMove(syn.sel,synSnap(curT())-lyrOffset);lyricsChanged();synText();};
+$("synPlayLn").onclick=()=>{if(syn.sel<0)return;const t=Math.max(0,lyrSorted[syn.sel].s+lyrOffset-1.5);if(playing)startAt(t);else{seek(t);togglePlay();}};
+$("synSelX").onclick=()=>{syn.sel=-1;synText();};
+
+/* ── tidslinjen ── */
+const synCv=$("synCv"),sx=synCv.getContext("2d");let sW=0,sH=0,sD=1;
+function synSize(){const r=synCv.getBoundingClientRect();sD=Math.min(2.5,devicePixelRatio||1);sW=r.width;sH=r.height;synCv.width=Math.round(sW*sD);synCv.height=Math.round(sH*sD);}
+addEventListener("resize",()=>{if(syn.open)synSize();});
+const PH=()=>sW*.32;
+let synView=null;                                         /* tid som visas medan du drar i tidslinjen */
+function synT(){return synView!=null?synView:curT();}
+function laneY(){return{y0:sH-58,y1:sH-12};}
+function synHit(x,y){
+  const T=synT(),{y0,y1}=laneY(),L=lyrSorted;if(y<y0-8||y>y1+8)return null;
+  for(let i=L.length-1;i>=0;i--){const xs=PH()+(L[i].s+lyrOffset-T)*syn.PPS;if(Math.abs(x-xs)<16)return{i,edge:true};}
+  for(let i=L.length-1;i>=0;i--){const xs=PH()+(L[i].s+lyrOffset-T)*syn.PPS,xe=i+1<L.length?PH()+(L[i+1].s+lyrOffset-T)*syn.PPS:sW+40;if(x>=xs&&x<=xe)return{i,edge:false};}
+  return null;
+}
+synCv.addEventListener("pointerdown",e=>{
+  const r=synCv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;synCv.setPointerCapture(e.pointerId);
+  const h=synHit(x,y);
+  syn.drag={x0:x,moved:false,hit:h,t0:synT(),s0:h?lyrSorted[h.i].s:0,wasPlay:playing};
+});
+synCv.addEventListener("pointermove",e=>{
+  const d=syn.drag;if(!d)return;const r=synCv.getBoundingClientRect(),dx=e.clientX-r.left-d.x0;
+  if(!d.moved&&Math.abs(dx)<7)return;d.moved=true;
+  if(d.hit&&(d.hit.edge||syn.sel===d.hit.i)){            /* flytta raden */
+    syn.sel=d.hit.i;let ns=d.s0+dx/syn.PPS;
+    if(syn.mag){const sn=synSnapQuiet(ns+lyrOffset);if(sn!=null)ns=sn-lyrOffset;}
+    synMove(d.hit.i,ns);synText();
+  }else{                                                  /* spola */
+    if(d.wasPlay&&playing)pause();
+    synView=clamp(d.t0-dx/syn.PPS,0,buf.duration);
+  }
+});
+function synSnapQuiet(t){const m=syn.mag;const f=syn.flash;const r=synSnap(t);syn.flash=f;return m&&r!==t?r:null;}
+function synUp(e){
+  const d=syn.drag;syn.drag=null;if(!d)return;
+  if(!d.moved){if(d.hit){syn.sel=d.hit.i;tapIdx=d.hit.i;synText();}return;}
+  if(synView!=null){const t=synView;synView=null;pos=t;if(d.wasPlay)startAt(t);else seek(t);}
+  else{markManual();lyricsChanged();synText();}
+}
+synCv.addEventListener("pointerup",synUp);synCv.addEventListener("pointercancel",synUp);
+function synLoop(){
+  if(!syn.open)return;syn.raf=requestAnimationFrame(synLoop);
+  if(!sW)synSize();if(!sW)return;
+  const c=syn.cache,T=synT(),P=syn.PPS,ph=PH(),L=lyrSorted,acc=TH.p||"#ffb000";
+  sx.setTransform(sD,0,0,sD,0,0);sx.clearRect(0,0,sW,sH);
+  const t0=T-ph/P,t1=T+(sW-ph)/P,wy=(sH-70)/2+4,wa=(sH-70)/2-6;
+  /* takt */
+  sx.lineWidth=1;
+  c.beats.forEach((b,i)=>{if(b<t0||b>t1)return;const x=ph+(b-T)*P,down=ana&&ana.downPhase!=null&&((i-ana.downPhase)%4+4)%4===0;
+    sx.strokeStyle=down?"rgba(255,255,255,.22)":"rgba(255,255,255,.08)";sx.beginPath();sx.moveTo(x,6);sx.lineTo(x,sH-66);sx.stroke();});
+  /* vågform: hela låten grå, sången i färg */
+  const f0=Math.max(0,Math.floor(t0/c.hop)),f1=Math.min(c.mixE.length-1,Math.ceil(t1/c.hop)),step=Math.max(1,Math.floor(1/(P*c.hop)));
+  sx.fillStyle="rgba(255,255,255,.16)";
+  for(let f=f0;f<=f1;f+=step){const x=ph+(f*c.hop-T)*P,v=Math.min(1,c.mixE[f])*wa;sx.fillRect(x,wy-v,Math.max(1,P*c.hop*step-.5),v*2);}
+  if(c.vocE){sx.fillStyle=acc;sx.globalAlpha=.85;
+    for(let f=f0;f<=f1;f+=step){const v=Math.min(1,c.vocE[f])*wa;if(v<1)continue;const x=ph+(f*c.hop-T)*P;sx.fillRect(x,wy-v,Math.max(1,P*c.hop*step-.5),v*2);}
+    sx.globalAlpha=1;
+    sx.fillStyle="#fff";c.ons.forEach(o=>{if(o<t0||o>t1)return;const x=ph+(o-T)*P;sx.beginPath();sx.moveTo(x-5,4);sx.lineTo(x+5,4);sx.lineTo(x,11);sx.fill();});
+  }
+  /* raderna */
+  const {y0,y1}=laneY();sx.font="600 12px system-ui,sans-serif";sx.textBaseline="middle";
+  for(let i=0;i<L.length;i++){
+    const s=L[i].s+lyrOffset,e=L[i].e!=null?s+L[i].e:(i+1<L.length?L[i+1].s+lyrOffset:s+4);if(e<t0||s>t1)continue;
+    const xs=ph+(s-T)*P,xe=ph+(e-T)*P-3,w=Math.max(8,xe-xs);
+    const done=i<tapIdx,isNext=i===tapIdx,sel=i===syn.sel;
+    sx.fillStyle=sel?acc:done?"rgba(255,255,255,.2)":"rgba(255,255,255,.07)";
+    sx.beginPath();sx.roundRect(xs,y0,w,y1-y0,8);sx.fill();
+    if(isNext){sx.setLineDash([5,4]);sx.strokeStyle=acc;sx.lineWidth=2;sx.stroke();sx.setLineDash([]);}
+    sx.fillStyle=sel?"#111":"rgba(255,255,255,"+(done||isNext?.95:.5)+")";
+    sx.save();sx.beginPath();sx.rect(xs+12,y0,Math.max(0,w-16),y1-y0);sx.clip();sx.fillText(L[i].t,xs+14,(y0+y1)/2);sx.restore();
+    sx.fillStyle=sel?"#111":acc;sx.fillRect(xs,y0+6,4,y1-y0-12);              /* handtag: dra här */
+    if(L[i].brk){sx.fillStyle="rgba(255,255,255,.4)";sx.fillText("♪",xe+6,(y0+y1)/2);}
+  }
+  /* magnet-blink */
+  const fl=syn.flash;if(fl&&performance.now()-fl.at<700){const a=1-(performance.now()-fl.at)/700,x=ph+(fl.t-T)*P;
+    sx.strokeStyle="rgba(255,255,255,"+a+")";sx.lineWidth=3;sx.beginPath();sx.moveTo(x,0);sx.lineTo(x,sH);sx.stroke();}
+  /* spelhuvud */
+  sx.fillStyle=acc;sx.fillRect(ph-1.5,0,3,sH);
+  sx.beginPath();sx.arc(ph,sH-4,5,0,6.2832);sx.fill();
+  sx.font="700 11px system-ui,sans-serif";sx.textBaseline="top";const tl=fmt(T)+","+Math.floor((T%1)*10);
+  const tw=sx.measureText(tl).width+10;sx.fillStyle="rgba(0,0,0,.6)";sx.beginPath();sx.roundRect(ph+5,4,tw,17,6);sx.fill();sx.fillStyle="#fff";sx.fillText(tl,ph+10,7);
+  synCue(T);
+  $("synPlay").textContent=playing?"❚❚":"▶";
+}
+/* hjälp i panelen: nedräkning till nästa sångstart, eller taktslagen i takten */
+function synCue(T){
+  const c=syn.cache,el=$("synCue"),tt=$("synCueT");
+  if(tapIdx>=lyrSorted.length||!playing){el.className="synCue";tt.textContent=playing?"":"Tryck ▶ eller TRYCK för att starta";el.style.setProperty("--f","0");return;}
+  const after=tapIdx>0?lyrSorted[tapIdx-1].s+lyrOffset+.4:-1;
+  if(c.ons.length){
+    const o=c.ons.find(x=>x>T-.05&&x>after);
+    if(o==null){el.className="synCue";tt.textContent="";return;}
+    const d=o-T;el.className="synCue on"+(d<.25?" now":"");
+    tt.textContent=d<.25?"Sången börjar NU":"Sång om "+d.toFixed(1).replace(".",",")+" s";
+    el.style.setProperty("--f",String(clamp(1-d/3,0,1)));
+  }else if(c.beats.length){
+    let i=c.beats.findIndex(b=>b>T);if(i<0){el.className="synCue";return;}
+    const k=ana&&ana.downPhase!=null?((i-1-ana.downPhase)%4+4)%4:(i-1)%4;
+    el.className="synCue beats";tt.textContent="●○○○".split("").map((_,j)=>j===k?"●":"○").join(" ")+"   takt";
+    const pb=c.beats[i-1]||0;el.style.setProperty("--f",String(clamp((T-pb)/(c.beats[i]-pb),0,1)));
+  }else{el.className="synCue";tt.textContent="";}
+}
+
 $("inTitle").addEventListener("change",()=>{if(cur){cur.title=$("inTitle").value.trim()||cur.name;$("songT").textContent=cur.title;saveRec(cur);setMediaSession();renderLib();}});
 $("inArtist").addEventListener("change",()=>{if(cur){cur.artist=$("inArtist").value.trim();$("songA").textContent=cur.artist;saveRec(cur);setMediaSession();renderLib();}});
 
