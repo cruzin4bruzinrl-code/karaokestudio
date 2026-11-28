@@ -1423,6 +1423,11 @@ body.synOn #toast{top:calc(env(safe-area-inset-top,0px) + 60px)!important;z-inde
 .synSpd{flex:1;min-width:0;justify-content:space-between}
 .synSpd button{flex:1}
 .synEdit{position:relative;padding-right:44px}#synSelX{position:absolute;right:6px;top:6px;width:32px;height:32px}
+.synBtns{grid-template-columns:1fr 3fr;height:clamp(96px,16vh,130px)}
+.syn #synBrk[hidden]{display:none}
+.synTap{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:none;transition:transform .15s,box-shadow .2s,filter .2s}
+.synTap.held{transform:scale(.95);filter:brightness(1.12);box-shadow:0 0 0 6px rgba(255,255,255,.18),0 0 40px var(--md-pri,#ffb000)}
+.synLine.live{color:var(--md-pri,#ffb000);text-shadow:0 0 18px color-mix(in srgb,var(--md-pri,#ffb000) 60%,transparent)}
 </style>
 </head>
 <body>
@@ -1766,7 +1771,7 @@ body.synOn #toast{top:calc(env(safe-area-inset-top,0px) + 60px)!important;z-inde
     <button class="synChip" id="synAI" title="Låt AI:n lägga texten efter sången">✨ AI-förslag</button>
   </div>
   <div class="synTl"><canvas id="synCv"></canvas></div>
-  <div class="synHelp">Dra i vågen = spola · dra en rads kant = flytta raden · tryck på en rad = välj den</div>
+  <div class="synHelp">Håll inne medan raden sjungs, släpp när den slutar · dra i vågen = spola · tryck på en rad = välj den</div>
   <div class="synEdit" id="synEdit" hidden>
     <span id="synSelT"></span>
     <button id="synM">−0,1 s</button><button id="synPlayLn">▶ Lyssna</button><button id="synP">+0,1 s</button><button id="synHere">Sätt här</button><button id="synSelX" class="synIc">✕</button>
@@ -1785,8 +1790,8 @@ body.synOn #toast{top:calc(env(safe-area-inset-top,0px) + 60px)!important;z-inde
   </div>
   <div class="synBtns">
     <button id="synUndo">↶<small>Ångra</small></button>
-    <button id="synBrk">♪<small>Mellanspel</small></button>
-    <button id="synTap" class="synTap">TRYCK<small>raden börjar nu</small></button>
+    <button id="synBrk" hidden>♪<small>Mellanspel</small></button>
+    <button id="synTap" class="synTap">HÅLL INNE<small>så länge raden sjungs</small></button>
   </div>
 </div>
 <div class="tapbar" id="tapbar" hidden>
@@ -4310,29 +4315,47 @@ $("synAI").onclick=()=>{
 function synText(){
   const L=lyrSorted,n=L.length,done=tapIdx>=n;
   $("synCnt").textContent=done?"Alla "+n+" rader klara":"Rad "+(tapIdx+1)+" av "+n;
-  $("synLbl").textContent=done?"Klart! Dra raderna i tidslinjen för att finjustera":"Tryck när den här raden börjar sjungas";
-  $("synLine").textContent=done?"✓":L[tapIdx].t;
-  $("synNext").textContent=!done&&L[tapIdx+1]?"Sen: "+L[tapIdx+1].t:"";
+  const hl=synHold?L[synHold.i]:null;
+  $("synLbl").textContent=hl?"Håll kvar … släpp när raden slutar":done?"Klart! Dra raderna i tidslinjen för att finjustera":"Håll inne när den här raden börjar";
+  $("synLine").textContent=hl?hl.t:done?"✓":L[tapIdx].t;$("synLine").classList.toggle("live",!!hl);
+  const nx=hl?L[synHold.i+1]:L[tapIdx+1];
+  $("synNext").textContent=!done&&nx?"Sen: "+nx.t:"";
+  $("synTap").innerHTML=hl?"SLÄPP<small>när raden slutar</small>":"HÅLL INNE<small>så länge raden sjungs</small>";
   $("synTap").disabled=done;$("synBrk").disabled=!tapIdx;$("synUndo").disabled=!tapHist.length;
   const s=syn.sel>=0&&L[syn.sel];$("synEdit").hidden=!s;
   if(s)$("synSelT").textContent="Rad "+(syn.sel+1)+" · "+fmt(s.s+lyrOffset)+","+Math.floor(((s.s+lyrOffset)%1)*10);
 }
-/* TRYCK: raden börjar nu (magneten finjusterar) */
+/* HÅLL INNE: tryck ner när raden börjar, släpp när den slutar (koncept "ficklampa") */
+let synHold=null;
+const nowLag=e=>Math.max(0,(performance.now()-(e.timeStamp||performance.now()))/1000)*(ver?ver.T:1);
 $("synTap").addEventListener("pointerdown",e=>{
-  e.preventDefault();if(tapIdx>=lyrSorted.length)return;
-  if(!playing){togglePlay();toast("Låten startade — tryck när raden börjar");return;}
-  const lag=Math.max(0,(performance.now()-(e.timeStamp||performance.now()))/1000)*(ver?ver.T:1);
-  const ln=lyrSorted[tapIdx];tapHist.push({i:tapIdx,s:ln.s,e:ln.e,brk:ln.brk});
-  const t=synSnap(Math.max(0,curT()-lag));
+  e.preventDefault();if(tapIdx>=lyrSorted.length||synHold)return;
+  if(!playing){togglePlay();toast("Låten spelar — håll inne när raden börjar");return;}
+  const b=$("synTap");try{b.setPointerCapture(e.pointerId);}catch(_){}
+  const L=lyrSorted,ln=L[tapIdx],p=tapIdx>0?L[tapIdx-1]:null;
+  tapHist.push({i:tapIdx,s:ln.s,e:ln.e,brk:ln.brk,w:ln.w,pe:p?p.e:null,pbrk:p?p.brk:null});
+  const t=synSnap(Math.max(0,curT()-nowLag(e)));
   ln.s=+Math.max(0,t-lyrOffset).toFixed(2);delete ln.w;delete ln.e;delete ln.brk;
-  for(let k=tapIdx+1;k<lyrSorted.length;k++)if(lyrSorted[k].s<=ln.s)lyrSorted[k].s=+(ln.s+.5*(k-tapIdx)).toFixed(2);
-  if(tapIdx>0){const p=lyrSorted[tapIdx-1];if(p.e!=null&&p.s+p.e>ln.s){delete p.e;delete p.brk;}}
-  tapIdx++;syn.sel=-1;
-  const b=$("synTap");b.classList.remove("hit");void b.offsetWidth;b.classList.add("hit");
-  if(navigator.vibrate)try{navigator.vibrate(12);}catch(_){}
-  lyricsChanged();synText();
-  if(tapIdx>=lyrSorted.length){toast("Klart — hela texten ligger i takt ✓","s");lyrStatus();}
+  for(let k=tapIdx+1;k<L.length;k++)if(L[k].s<=ln.s)L[k].s=+(ln.s+.5*(k-tapIdx)).toFixed(2);
+  if(p&&p.e!=null){const end=p.s+p.e;if(end>ln.s){delete p.e;delete p.brk;}else if(ln.s-end<2.5)delete p.brk;else p.brk=1;}
+  synHold={i:tapIdx,t0:performance.now()};syn.sel=-1;
+  b.classList.add("held");if(navigator.vibrate)try{navigator.vibrate(10);}catch(_){}
+  synText();
 });
+function synRelease(e){
+  if(!synHold)return;const h=synHold;synHold=null;
+  const b=$("synTap");b.classList.remove("held");b.classList.remove("hit");void b.offsetWidth;b.classList.add("hit");
+  const L=lyrSorted,ln=L[h.i],t=curT()-nowLag(e)-lyrOffset,held=performance.now()-h.t0;
+  if(held>350&&t>ln.s+.3){ln.e=+(t-ln.s).toFixed(2);if(h.i<L.length-1)ln.brk=1;else delete ln.brk;}
+  else{delete ln.e;delete ln.brk;}
+  tapIdx=h.i+1;
+  if(navigator.vibrate)try{navigator.vibrate(6);}catch(_){}
+  lyricsChanged();synText();
+  if(tapIdx>=L.length){toast("Klart — hela texten ligger i takt ✓","s");lyrStatus();}
+}
+$("synTap").addEventListener("pointerup",synRelease);
+$("synTap").addEventListener("pointercancel",synRelease);
+$("synTap").addEventListener("contextmenu",e=>e.preventDefault());
 $("synBrk").addEventListener("pointerdown",e=>{
   e.preventDefault();if(!tapIdx)return;
   const lag=Math.max(0,(performance.now()-(e.timeStamp||performance.now()))/1000)*(ver?ver.T:1);
@@ -4343,7 +4366,9 @@ $("synBrk").addEventListener("pointerdown",e=>{
 $("synUndo").onclick=()=>{
   if(!tapHist.length)return;const h=tapHist.pop();
   if(h.i==null){const l=lyrSorted[h.brk];if(l){delete l.e;delete l.brk;}}
-  else{tapIdx=h.i;const l=lyrSorted[tapIdx];l.s=h.s;if(h.e!=null)l.e=h.e;if(h.brk)l.brk=1;seek(Math.max(0,l.s+lyrOffset-3));}
+  else{tapIdx=h.i;const l=lyrSorted[tapIdx];l.s=h.s;if(h.e!=null)l.e=h.e;else delete l.e;if(h.brk)l.brk=1;else delete l.brk;if(h.w)l.w=h.w;
+    const p=lyrSorted[tapIdx-1];if(p&&"pe" in h){if(h.pe!=null)p.e=h.pe;else delete p.e;if(h.pbrk)p.brk=1;else delete p.brk;}
+    seek(Math.max(0,l.s+lyrOffset-3));}
   lyricsChanged();synText();
 };
 /* vald rad: finjustera */
@@ -4400,6 +4425,7 @@ function synLoop(){
   if(!syn.open)return;syn.raf=requestAnimationFrame(synLoop);
   if(!sW)synSize();if(!sW)return;
   const c=syn.cache,T=synT(),P=syn.PPS,ph=PH(),L=lyrSorted,acc=TH.p||"#ffb000";
+  if(synHold){const l=lyrSorted[synHold.i];if(l)l.e=Math.max(.05,curT()-lyrOffset-l.s);}
   sx.setTransform(sD,0,0,sD,0,0);sx.clearRect(0,0,sW,sH);
   const t0=T-ph/P,t1=T+(sW-ph)/P,wy=(sH-70)/2+4,wa=(sH-70)/2-6;
   /* takt */
@@ -4443,6 +4469,7 @@ function synLoop(){
 /* hjälp i panelen: nedräkning till nästa sångstart, eller taktslagen i takten */
 function synCue(T){
   const c=syn.cache,el=$("synCue"),tt=$("synCueT");
+  if(synHold){el.className="synCue";tt.textContent="";return;}
   if(tapIdx>=lyrSorted.length||!playing){el.className="synCue";tt.textContent=playing?"":"Tryck ▶ eller TRYCK för att starta";el.style.setProperty("--f","0");return;}
   const after=tapIdx>0?lyrSorted[tapIdx-1].s+lyrOffset+.4:-1;
   if(c.ons.length){
